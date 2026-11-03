@@ -1,0 +1,19 @@
+{
+  "name": "vpn-account-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local VPN account dashboard powered by Tomato API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test:api": "node test-api.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0"
+  }
+}
