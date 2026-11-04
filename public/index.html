@@ -36,12 +36,12 @@
         <div class="panel form-panel"><div class="panel-head"><div><h3>Buat akun VPN</h3><p class="muted">Isi data akun lalu kirim ke server.</p></div><span class="pill">CREATE ACCOUNT</span></div>
           <form id="createForm" class="form-grid">
             <label>Protocol<select name="proto" id="createProto"><option value="ssh">SSH / SSH WS / SSL / SlowDNS</option><option value="vmess">VMess</option><option value="vless">VLESS</option><option value="trojan">Trojan</option><option value="zivpn">ZiVPN</option></select></label>
-            <label>Username<input name="username" required maxlength="32" pattern="[A-Za-z0-9_.-]{1,32}" value="muhlis" placeholder="muhlis"></label>
-            <label id="passwordField">Password<input name="password" maxlength="64" value="muhlis" required placeholder="muhlis"><small id="passwordHint">SSH wajib password; ZiVPN opsional.</small></label>
+            <label>Username<input name="username" required maxlength="32" pattern="[A-Za-z0-9_.-]{1,32}" value="muhlis" placeholder="username"></label>
+            <label id="passwordField">Password<input name="password" maxlength="64" value="muhlis" required placeholder="password"><small id="passwordHint">SSH wajib password; ZiVPN opsional.</small></label>
             <label id="uuidField" class="hidden">UUID (opsional, otomatis dibuat jika kosong)<input name="uuid" placeholder="Kosongkan untuk generate otomatis"></label>
             <label>Masa aktif (hari)<select name="days" required><option value="7">7 hari</option><option value="30" selected>30 hari</option></select></label>
-            <label>Batas perangkat / IP<input name="ip_limit" type="number" min="1" max="1000" value="2" required><small>0 = tanpa batas.</small></label>
-            <label>Kuota (GB)<input name="quota_gb" type="number" min="0" step="1" value="0" required><small>0 = tanpa batas kuota (jika didukung server)</small></label>
+            <label>Batas perangkat / IP<input name="ip_limit" type="number" min="1" max="1000" value="2" required><small>nambah 1 ip 2k</small></label>
+            <label>Kuota (GB)<input name="quota_gb" type="number" min="0" step="1" value="0" required><small>isi 250 untuk 30hari</small></label>
             <div class="form-actions"><button class="primary" type="submit">Buat akun <span>→</span></button><button class="secondary" type="button" id="trialBtn">Buat trial 60 menit</button></div>
           </form>
         </div>
