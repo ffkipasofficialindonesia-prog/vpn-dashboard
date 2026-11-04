@@ -1,3 +1,8 @@
 node_modules/
 .env
 data/
+
+# Backup dan file lokal
+*.backup-*
+*.bak
+*.old

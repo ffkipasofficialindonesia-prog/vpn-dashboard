@@ -188,48 +188,186 @@ function renderLinks(d){
   const arr=Object.entries(all).filter(([k,v])=>v);
   return arr.length?`<div class="result-links">${arr.map(([k,v])=>`<a href="${escAttr(v)}" target="_blank" rel="noopener">${esc(k)} ↗</a>`).join("")}</div>`:"";
 }
-function renderCreated(response){
+function renderCreated(response, meta={}){
   const d=response.result?.data||response.result||response.data||response;
-  const box=$("#createdResult"); if(!box)return;
+  const box=$("#createdResult");
+  if(!box)return;
+
+  const days=d.days??meta.days;
+  const ipLimit=d.ip_limit??meta.ip_limit;
+  const quota=d.quota_gb??meta.quota_gb;
+  const charged=Number(response.charged||0);
+
+  const entries=[
+    ["Username",d.username],
+    ["Password",d.password],
+    ["UUID",d.uuid],
+    ["Status",d.status],
+    ["Masa aktif",d.expired],
+    ["Host",d.connection?.host||d.domain],
+    ["NS Domain",d.connection?.slowdns_host||d.ns_domain],
+    ["Batas IP",ipLimit],
+    ["Kuota (GB)",quota]
+  ];
+
   box.classList.remove("hidden");
-  const entries=[["Username",d.username], ["Password",d.password], ["UUID",d.uuid], ["Status",d.status], ["Masa aktif",d.expired], ["Host",d.connection?.host||d.domain], ["NS Domain",d.connection?.slowdns_host||d.ns_domain], ["Batas IP",d.ip_limit]];
-  box.innerHTML=`<div class="result-title"><div><p class="eyebrow">ACCOUNT CREATED</p><h3>Akun berhasil dibuat</h3></div><span class="badge">ACTIVE</span></div><p class="muted">Paket ${PACKAGE_DAYS} hari · Rp${PACKAGE_PRICE.toLocaleString("id-ID")}</p><div class="result-data">${entries.filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=="").map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("")}</div>${renderLinks(d)}<button class="secondary" id="copyAccount" style="margin-top:15px">Salin detail akun</button>`;
-  $("#copyAccount").onclick=()=>navigator.clipboard.writeText(entries.filter(x=>x[1]).map(([k,v])=>`${k}: ${v}`).join("\n")).then(()=>notice("Detail akun disalin."));
+  box.innerHTML=`
+    <div class="result-title">
+      <div><p class="eyebrow">ACCOUNT CREATED</p><h3>Akun berhasil dibuat</h3></div>
+      <span class="badge">ACTIVE</span>
+    </div>
+    <p class="muted">${meta.trial?"Trial 60 menit":`Paket ${days||"-"} hari`} · Biaya ${money(charged)}</p>
+    <div class="result-data">
+      ${entries.filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=="")
+        .map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("")}
+    </div>
+    ${renderLinks(d)}
+    <button class="secondary" id="copyAccount" style="margin-top:15px">Salin detail akun</button>`;
+
+  $("#copyAccount").onclick=()=>navigator.clipboard.writeText(
+    entries.filter(x=>x[1]!==undefined&&x[1]!==null&&x[1]!=="")
+      .map(([k,v])=>`${k}: ${v}`).join("\n")
+  ).then(()=>notice("Detail akun disalin."));
 }
+
 function bindCreate(){
-  const proto=$("#createProto"); proto?.addEventListener("change",updateProtoFields); updateProtoFields();
+  const form=$("#createForm");
+  const proto=$("#createProto");
+  const role=state.user?.role;
+
+  proto?.addEventListener("change",updateProtoFields);
+  updateProtoFields();
+
   let days=$('#createForm [name="days"]');
-  if(days && state.user?.role==="admin") {
+
+  if(days && role==="admin"){
     days.outerHTML='<input name="days" type="number" min="1" max="3650" value="30" required>';
-  } else if(days) {
+    days=$('#createForm [name="days"]');
+  }else if(days && role==="member"){
     days.value="30";
   }
+
   const ipInput=$('#createForm [name="ip_limit"]');
-  if(ipInput && state.user?.role==="member") { ipInput.min="1"; ipInput.value="2"; }
-  const form=$("#createForm");
+
+  if(ipInput){
+    if(role==="member"){
+      ipInput.min="2";
+      if(Number(ipInput.value)<2)ipInput.value="2";
+    }else{
+      ipInput.min="0";
+    }
+  }
+
+  const actions=$(".form-actions",form);
+  if(actions && !$("#createPricePreview")){
+    actions.insertAdjacentHTML("beforebegin",
+      '<div id="createPricePreview" class="muted" style="grid-column:1/-1;padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:var(--surface,rgba(255,255,255,.03))"></div>'
+    );
+  }
+
+  const updatePricePreview=()=>{
+    const preview=$("#createPricePreview");
+    if(!preview)return;
+
+    if(role!=="member"){
+      preview.innerHTML="<strong>Biaya pembuatan: GRATIS</strong><br>Admin bebas menentukan durasi, IP, dan kuota.";
+      return;
+    }
+
+    const selectedDays=Number(days?.value||30);
+    const ip=Math.max(2,Number(ipInput?.value||2));
+    const base=selectedDays===7?2000:5000;
+    const price=base+(Math.max(0,ip-2)*2000);
+    const protocol=proto?.value;
+    const quota=["vmess","vless","trojan"].includes(protocol)
+      ?Math.round((selectedDays===7?30:250)*(ip/2))
+      :null;
+
+    preview.innerHTML=
+      `<strong>Perkiraan biaya: ${money(price)}</strong><br>`+
+      `Paket ${selectedDays} hari · ${ip} IP`+
+      (quota!==null?` · Kuota V2Ray otomatis ${quota} GB`:"")+
+      `<br><small>Termasuk 2 IP. Setiap IP tambahan Rp2.000.</small>`;
+  };
+
+  days?.addEventListener("change",updatePricePreview);
+  days?.addEventListener("input",updatePricePreview);
+  ipInput?.addEventListener("input",updatePricePreview);
+  proto?.addEventListener("change",updatePricePreview);
+  updatePricePreview();
+
   let createRequestInProgress=false;
+
   form?.addEventListener("submit",async e=>{
     e.preventDefault();
-    // Prevent repeated Enter/click submissions while the first request is running.
+
     if(createRequestInProgress)return;
     createRequestInProgress=true;
+
     const btn=$('button[type="submit"]',form);
     const originalButtonText=btn?.textContent;
-    if(btn){btn.disabled=true;btn.textContent="Memproses…";}
-    const fd=new FormData(form),p=fd.get("proto");
-    const body={username:fd.get("username"),days:Number(fd.get("days")||PACKAGE_DAYS),ip_limit:Number(fd.get("ip_limit")),quota_gb:Number(fd.get("quota_gb"))};
+
+    if(btn){
+      btn.disabled=true;
+      btn.textContent="Memproses…";
+    }
+
+    const fd=new FormData(form);
+    const p=fd.get("proto");
+
+    const body={
+      username:fd.get("username"),
+      days:Number(fd.get("days")||PACKAGE_DAYS),
+      ip_limit:Number(fd.get("ip_limit")),
+      quota_gb:Number(fd.get("quota_gb")||0)
+    };
+
     if(p==="ssh")body.password=fd.get("password");
     if(p==="zivpn"&&fd.get("password"))body.password=fd.get("password");
     if(fd.get("uuid"))body.uuid=fd.get("uuid");
-    try{const d=await api(`/api/accounts/${p}`,{method:"POST",body:JSON.stringify(body)});renderCreated(d);await refreshCurrentUser();await loadAccounts();notice(`Akun berhasil dibuat. Biaya Rp${Number(d.charged||0).toLocaleString("id-ID")}.`);}
-    catch(err){errorNotice(err);}finally{
+
+    try{
+      const d=await api(`/api/accounts/${p}`,{
+        method:"POST",
+        body:JSON.stringify(body)
+      });
+
+      renderCreated(d,{
+        days:body.days,
+        ip_limit:body.ip_limit,
+        quota_gb:body.quota_gb
+      });
+
+      await refreshCurrentUser();
+
+      const accountsProto=$("#accountsProto");
+      if(accountsProto)accountsProto.value=p;
+
+      await loadAccounts();
+
+      notice(`Akun berhasil dibuat. Biaya ${money(d.charged||0)}.`);
+    }catch(err){
+      errorNotice(err);
+    }finally{
       createRequestInProgress=false;
-      if(btn){btn.disabled=false;btn.textContent=originalButtonText||"Buat Akun";}
+      if(btn){
+        btn.disabled=false;
+        btn.textContent=originalButtonText||"Buat Akun";
+      }
     }
   });
+
   $("#trialBtn")?.addEventListener("click",async()=>{
-    try{const d=await api(`/api/accounts/${proto.value}/trial`,{method:"POST",body:JSON.stringify({minutes:60})});renderCreated(d);notice("Akun trial berhasil dibuat.");}
-    catch(err){errorNotice(err);}
+    try{
+      const d=await api(`/api/accounts/${proto.value}/trial`,{
+        method:"POST",
+        body:JSON.stringify({minutes:60})
+      });
+      renderCreated(d,{trial:true});
+      notice("Akun trial berhasil dibuat.");
+    }catch(err){
+      errorNotice(err);
+    }
   });
 }
 
@@ -240,7 +378,7 @@ function accountRows(data){
   if(!filtered.length)return '<div class="empty">Tidak ada akun yang cocok.</div>';
   return `<div class="account-card-grid">${filtered.map(a=>{
     const u=a.username||a.user||"",locked=!!a.locked,expired=a.expired||a.expires_at||"-";
-    return `<article class="account-card"><div class="account-card-top"><div class="account-avatar">${esc(String(u||"?").slice(0,1).toUpperCase())}</div><div class="account-identity"><strong>${esc(u||"-")}</strong><span>VPN Account</span></div><span class="badge ${locked?"off":""}">${locked?"LOCKED":esc(a.status||"ACTIVE")}</span></div><div class="account-details"><div><span>Expired</span><b>${esc(String(expired))}</b></div><div><span>Kuota</span><b>${esc(a.quota_gb??a.quota_bytes??"-")}</b></div><div><span>Batas IP</span><b>${esc(a.ip_limit??"-")}</b></div></div><div class="account-card-actions"><button class="mini" data-action="renew" data-user="${escAttr(u)}">↻ Renew 30 hari / Rp5k</button><button class="mini" data-action="${locked?"unlock":"lock"}" data-user="${escAttr(u)}">${locked?"Unlock":"Lock"}</button><button class="mini danger" data-action="delete" data-user="${escAttr(u)}">Hapus</button></div></article>`;
+    return `<article class="account-card"><div class="account-card-top"><div class="account-avatar">${esc(String(u||"?").slice(0,1).toUpperCase())}</div><div class="account-identity"><strong>${esc(u||"-")}</strong><span>VPN Account</span></div><span class="badge ${locked?"off":""}">${locked?"LOCKED":esc(a.status||"ACTIVE")}</span></div><div class="account-details"><div><span>Expired</span><b>${esc(String(expired))}</b></div><div><span>Kuota</span><b>${esc(a.quota_gb??a.quota_bytes??"-")}</b></div><div><span>Batas IP</span><b>${esc(a.ip_limit??"-")}</b></div></div><div class="account-card-actions"><button class="mini" data-action="renew" data-user="${escAttr(u)}">↻ Renew</button><button class="mini" data-action="${locked?"unlock":"lock"}" data-user="${escAttr(u)}">${locked?"Unlock":"Lock"}</button><button class="mini danger" data-action="delete" data-user="${escAttr(u)}">Hapus</button></div></article>`;
   }).join("")}</div>`;
 }
 async function loadAccounts(){
@@ -259,8 +397,42 @@ function bindAccounts(){
       if(action==="delete"&&!confirm(`Hapus akun ${user}? Tindakan ini tidak bisa dibatalkan.`))return;
       let result;
       if(action==="renew"){
-        if(!confirm(`Perpanjang ${user} selama 30 hari dengan biaya Rp5.000?`))return;
-        result=await api(`/api/accounts/${p}/${encodeURIComponent(user)}/renew`,{method:"POST",body:JSON.stringify({days:PACKAGE_DAYS})});
+        const isAdmin=state.user?.role==="admin";
+        const rawDays=prompt(
+          isAdmin
+            ?"Masukkan durasi renew (1–3650 hari):"
+            :"Pilih durasi renew: 7 atau 30 hari.",
+          "30"
+        );
+        if(rawDays===null)return;
+
+        const renewalDays=Number(rawDays);
+        if(!Number.isInteger(renewalDays) ||
+          (isAdmin?(renewalDays<1||renewalDays>3650):![7,30].includes(renewalDays))){
+          notice(isAdmin
+            ?"Durasi renew admin harus 1–3650 hari."
+            :"Member hanya bisa memilih 7 atau 30 hari.",true);
+          return;
+        }
+
+        const account=state.accounts.find(a=>
+          String(a.username||a.user||"").toLowerCase()===String(user).toLowerCase()
+        );
+        const ipLimit=Math.max(2,Number(account?.ip_limit||2));
+        const estimatedPrice=(renewalDays===7?2000:5000)+
+          Math.max(0,ipLimit-2)*2000;
+
+        const confirmation=isAdmin
+          ?`Perpanjang ${user} selama ${renewalDays} hari?`
+          :`Perpanjang ${user} selama ${renewalDays} hari dengan biaya ${money(estimatedPrice)} (${ipLimit} IP)?`;
+
+        if(!confirm(confirmation))return;
+
+        result=await api(`/api/accounts/${p}/${encodeURIComponent(user)}/renew`,{
+          method:"POST",
+          body:JSON.stringify({days:renewalDays})
+        });
+
         await refreshCurrentUser();
       }else if(action==="delete")result=await api(`/api/accounts/${p}/${encodeURIComponent(user)}`,{method:"DELETE"});
       else result=await api(`/api/accounts/${p}/${encodeURIComponent(user)}/${action}`,{method:"POST",body:JSON.stringify({})});
@@ -309,7 +481,15 @@ async function refreshDashboard(){
     const [accounts,online]=await Promise.all([
       api(`/api/accounts/${state.proto}`),api(`/api/online/${state.proto}`)
     ]);
-    const arr=Array.isArray(accounts.data)?accounts.data:[];
+    const arr=Array.isArray(accounts.accounts)
+      ? accounts.accounts
+      : Array.isArray(accounts.data)
+        ? accounts.data
+        : Array.isArray(accounts.data?.accounts)
+          ? accounts.data.accounts
+          : Array.isArray(accounts.result?.data)
+            ? accounts.result.data
+            : [];
     if($("#statAccounts"))$("#statAccounts").textContent=arr.length;
     if($("#statOnline"))$("#statOnline").textContent=Array.isArray(online.data)?online.data.length:0;
     if($("#statApi")){$("#statApi").textContent="Aktif";$("#statApi").style.color="";}
@@ -331,7 +511,7 @@ function renderMembers(){
       <td data-label="Akses server"><div class="server-toggles"><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg2" ${servers.includes("sg2")?"checked":""}> SG2</label><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg3" ${servers.includes("sg3")?"checked":""}> SG3</label></div></td>
       <td data-label="Status"><span class="badge ${u.active===false?"off":""}">${u.active===false?"NONAKTIF":"AKTIF"}</span></td>
       <td data-label="Tambah saldo"><div class="topup-control"><input type="number" min="1" step="1" inputmode="numeric" placeholder="Nominal Rp" aria-label="Nominal saldo ${escAttr(u.username)}" data-topup-amount="${escAttr(u.id)}"><button class="mini topup-btn" data-member-action="topup" data-id="${escAttr(u.id)}">＋ Tambah</button></div></td>
-      <td data-label="Aksi"><div class="actions"><button class="mini" data-member-action="toggle" data-id="${escAttr(u.id)}">${u.active===false?"Aktifkan":"Nonaktifkan"}</button></div></td>
+      <td data-label="Aksi"><div class="actions"><button class="mini" data-member-action="toggle" data-id="${escAttr(u.id)}">${u.active===false?"Aktifkan":"Nonaktifkan"}</button><button class="mini danger" data-member-action="delete" data-id="${escAttr(u.id)}">Hapus</button></div></td>
     </tr>`;
   }).join("")}</tbody></table>`;
 }
@@ -373,6 +553,12 @@ function bindMembers(){
         if(!confirm(`${active?"Aktifkan":"Nonaktifkan"} member ${user.username}?`))return;
         await api(`/api/admin/users/${encodeURIComponent(id)}`,{method:"PATCH",body:JSON.stringify({active})});
         notice(`Member ${user.username} sekarang ${active?"aktif":"nonaktif"}.`);await loadMembers();
+      }else if(action==="delete"){
+        if(!confirm(`Hapus member ${user.username} dari dashboard? Akun VPN yang sudah dibuat tidak ikut terhapus.`))return;
+        await api(`/api/admin/users/${encodeURIComponent(id)}`,{method:"DELETE"});
+        notice(`Member ${user.username} berhasil dihapus.`);
+        await loadMembers();
+        await refreshDashboard();
       }
     }catch(err){errorNotice(err);}
   });

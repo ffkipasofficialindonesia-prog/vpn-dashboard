@@ -514,10 +514,16 @@ function canManageAccount(req, server, proto, username) {
   return !!account && account.ownerId === req.user.id;
 }
 
-function getPrice(proto, ipLimit = MEMBER_BASE_IP) {
+function getPrice(proto, days = 30, ipLimit = MEMBER_BASE_IP) {
   if (!validProto(proto)) return 0;
-  const extraIps = Math.max(0, Number(ipLimit || MEMBER_BASE_IP) - MEMBER_BASE_IP);
-  return ACCOUNT_PACKAGE_PRICE + extraIps * MEMBER_EXTRA_IP_PRICE;
+
+  const basePrice = Number(days) === 7 ? 2000 : 5000;
+  const extraIps = Math.max(
+    0,
+    Number(ipLimit || MEMBER_BASE_IP) - MEMBER_BASE_IP
+  );
+
+  return basePrice + extraIps * MEMBER_EXTRA_IP_PRICE;
 }
 
 function extractUsername(value, depth = 0) {
@@ -832,6 +838,36 @@ app.patch("/api/admin/users/:id", auth, adminOnly, async (req, res) => {
   }
 });
 
+app.delete("/api/admin/users/:id", auth, adminOnly, async (req, res) => {
+  try {
+    const removed = await mutateDatabase(() => {
+      const index = db.users.findIndex(item =>
+        item.id === req.params.id && item.role === "member"
+      );
+
+      if (index === -1) {
+        const error = new Error("Member tidak ditemukan.");
+        error.status = 404;
+        throw error;
+      }
+
+      const [user] = db.users.splice(index, 1);
+
+      return {
+        id: user.id,
+        username: user.username
+      };
+    });
+
+    res.json({
+      message: `Member ${removed.username} berhasil dihapus.`,
+      user: removed
+    });
+  } catch (error) {
+    errorResponse(res, error);
+  }
+});
+
 // --------------------------------------------------
 // ADMIN: BALANCE & PRICES
 // --------------------------------------------------
@@ -921,6 +957,7 @@ app.get("/api/ping", auth, async (req, res) => {
   }
 });
 
+
 app.get("/api/server", auth, async (req, res) => {
   const server = checkServerAccess(req, res);
   if (!server) return;
@@ -1005,7 +1042,7 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
     return res.status(400).json({ message: "Masa aktif admin harus 1–3650 hari." });
   }
 
-  if (!Number.isInteger(nIp) || nIp < (req.user.role === "member" ? 1 : 0) || nIp > 1000) {
+  if (!Number.isInteger(nIp) || nIp < (req.user.role === "member" ? 2 : 0) || nIp > 1000) {
     return res.status(400).json({
       message: "Batas IP harus 0–1000."
     });
@@ -1045,7 +1082,7 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
     });
   }
 
-  const price = getPrice(proto, nIp);
+  const price = getPrice(proto, nDays, nIp);
 
   if (!Number.isSafeInteger(price) || price < 0) {
     return res.status(400).json({
@@ -1073,15 +1110,16 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
     }
 
     // Member V2Ray packages have fixed base quotas; extra IPs scale quota proportionally.
-    const effectiveQuota = req.user.role === "member" && V2RAY_PROTOCOLS.has(proto)
-      ? (nDays === 7 ? 30 : 250) * (nIp / MEMBER_BASE_IP)
-      : nQuota;
-    const body = {
-      username,
-      days: nDays,
-      ip_limit: nIp,
-      quota_gb: effectiveQuota
-    };
+   const effectiveQuota = req.user.role === "member" && V2RAY_PROTOCOLS.has(proto)
+  ? Math.round((nDays === 7 ? 30 : 250) * (nIp / MEMBER_BASE_IP))
+  : nQuota;
+
+const body = {
+  username,
+  days: nDays,
+  ip_limit: nIp,
+  quota_gb: effectiveQuota
+};
 
     if (proto === "ssh") body.password = password;
     if (proto === "zivpn" && password) body.password = password;
@@ -1270,27 +1308,44 @@ app.post(
     const server = checkServerAccess(req, res);
     if (!server) return;
 
+    const account = findOwnedAccount(server.id, proto, username);
+
     if (!canManageAccount(req, server, proto, username)) {
       return res.status(404).json({
         message: "Akun tidak ditemukan."
       });
     }
 
-    if (days !== ACCOUNT_PACKAGE_DAYS) {
+    if (req.user.role === "member") {
+      if (![7, 30].includes(days)) {
+        return res.status(400).json({
+          message: "Member hanya bisa renew selama 7 atau 30 hari."
+        });
+      }
+    } else if (!Number.isInteger(days) || days < 1 || days > 3650) {
       return res.status(400).json({
-        message: "Renewal hanya tersedia untuk 30 hari."
+        message: "Durasi renew admin harus 1–3650 hari."
       });
     }
 
-    const price = ACCOUNT_PACKAGE_PRICE;
+    const storedIpLimit = Number(account?.ip_limit ?? MEMBER_BASE_IP);
+    const ipLimit = Number.isInteger(storedIpLimit) &&
+      storedIpLimit >= 0 && storedIpLimit <= 1000
+      ? storedIpLimit
+      : MEMBER_BASE_IP;
+
+    const price = req.user.role === "member"
+      ? getPrice(proto, days, ipLimit)
+      : 0;
+
     let charged = false;
 
     try {
-      if (req.user.role === "member" && price > 0) {
+      if (price > 0) {
         await chargeBalance(
           req.user.id,
           price,
-          `Perpanjang ${proto} ${username} selama ${days} hari`
+          `Perpanjang ${proto} ${username} selama ${days} hari (${ipLimit} IP)`
         );
         charged = true;
       }
@@ -1306,15 +1361,21 @@ app.post(
 
       res.json({
         result,
-        charged: req.user.role === "member" ? price : 0
+        charged: req.user.role === "member" ? price : 0,
+        days,
+        ip_limit: ipLimit
       });
     } catch (error) {
       if (charged) {
-        await refundBalance(
-          req.user.id,
-          price,
-          `Refund perpanjangan ${username} gagal`
-        );
+        try {
+          await refundBalance(
+            req.user.id,
+            price,
+            `Refund perpanjangan ${username} gagal`
+          );
+        } catch (refundError) {
+          console.error("Gagal mengembalikan saldo setelah renew gagal:", refundError);
+        }
       }
 
       errorResponse(res, error);
@@ -1476,7 +1537,17 @@ app.get("/api/online/:proto", auth, async (req, res) => {
 // FRONTEND
 // --------------------------------------------------
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), {
+  setHeaders(res, filePath) {
+    const ext = require("path").extname(filePath).toLowerCase();
+
+    if (ext === ".html") {
+      res.setHeader("Cache-Control", "no-store");
+    } else if (ext === ".js" || ext === ".css") {
+      res.setHeader("Cache-Control", "no-cache, must-revalidate");
+    }
+  }
+}));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
