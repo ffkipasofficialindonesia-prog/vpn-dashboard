@@ -20,6 +20,9 @@ const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 const PROTOCOLS = ["ssh", "vmess", "vless", "trojan", "zivpn"];
 const ACCOUNT_PACKAGE_DAYS = 30;
 const ACCOUNT_PACKAGE_PRICE = 5000;
+const MEMBER_BASE_IP = 2;
+const MEMBER_EXTRA_IP_PRICE = 2000;
+const V2RAY_PROTOCOLS = new Set(["vmess", "vless", "trojan"]);
 function cleanApiKey(value) {
   return String(value || "")
     .trim()
@@ -511,8 +514,10 @@ function canManageAccount(req, server, proto, username) {
   return !!account && account.ownerId === req.user.id;
 }
 
-function getPrice(proto) {
-  return validProto(proto) ? ACCOUNT_PACKAGE_PRICE : 0;
+function getPrice(proto, ipLimit = MEMBER_BASE_IP) {
+  if (!validProto(proto)) return 0;
+  const extraIps = Math.max(0, Number(ipLimit || MEMBER_BASE_IP) - MEMBER_BASE_IP);
+  return ACCOUNT_PACKAGE_PRICE + extraIps * MEMBER_EXTRA_IP_PRICE;
 }
 
 function extractUsername(value, depth = 0) {
@@ -993,13 +998,14 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
   const nIp = Number(ip_limit ?? 0);
   const nQuota = Number(quota_gb ?? 0);
 
-  if (nDays !== ACCOUNT_PACKAGE_DAYS) {
-    return res.status(400).json({
-      message: "Pembuatan akun hanya tersedia untuk 30 hari."
-    });
+  if (req.user.role === "member" && ![7, 30].includes(nDays)) {
+    return res.status(400).json({ message: "Member hanya bisa membuat akun 7 atau 30 hari." });
+  }
+  if (req.user.role === "admin" && (!Number.isInteger(nDays) || nDays < 1 || nDays > 3650)) {
+    return res.status(400).json({ message: "Masa aktif admin harus 1–3650 hari." });
   }
 
-  if (!Number.isInteger(nIp) || nIp < 0 || nIp > 1000) {
+  if (!Number.isInteger(nIp) || nIp < (req.user.role === "member" ? 1 : 0) || nIp > 1000) {
     return res.status(400).json({
       message: "Batas IP harus 0–1000."
     });
@@ -1039,7 +1045,7 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
     });
   }
 
-  const price = ACCOUNT_PACKAGE_PRICE;
+  const price = getPrice(proto, nIp);
 
   if (!Number.isSafeInteger(price) || price < 0) {
     return res.status(400).json({
@@ -1066,11 +1072,15 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
       charged = true;
     }
 
+    // Member V2Ray packages have fixed base quotas; extra IPs scale quota proportionally.
+    const effectiveQuota = req.user.role === "member" && V2RAY_PROTOCOLS.has(proto)
+      ? (nDays === 7 ? 30 : 250) * (nIp / MEMBER_BASE_IP)
+      : nQuota;
     const body = {
       username,
       days: nDays,
       ip_limit: nIp,
-      quota_gb: nQuota
+      quota_gb: effectiveQuota
     };
 
     if (proto === "ssh") body.password = password;
@@ -1098,6 +1108,9 @@ app.post("/api/accounts/:proto", auth, async (req, res) => {
         proto,
         server: server.id,
         price,
+        ip_limit: nIp,
+        days: nDays,
+        quota_gb: effectiveQuota,
         createdAt: new Date().toISOString()
       });
     });
