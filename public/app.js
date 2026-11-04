@@ -198,8 +198,14 @@ function renderCreated(response){
 }
 function bindCreate(){
   const proto=$("#createProto"); proto?.addEventListener("change",updateProtoFields); updateProtoFields();
-  const days=$('input[name="days"]');
-  if(days){days.value=String(PACKAGE_DAYS);days.min=String(PACKAGE_DAYS);days.max=String(PACKAGE_DAYS);days.readOnly=true;}
+  let days=$('#createForm [name="days"]');
+  if(days && state.user?.role==="admin") {
+    days.outerHTML='<input name="days" type="number" min="1" max="3650" value="30" required>';
+  } else if(days) {
+    days.value="30";
+  }
+  const ipInput=$('#createForm [name="ip_limit"]');
+  if(ipInput && state.user?.role==="member") { ipInput.min="1"; ipInput.value="2"; }
   const form=$("#createForm");
   let createRequestInProgress=false;
   form?.addEventListener("submit",async e=>{
@@ -211,11 +217,11 @@ function bindCreate(){
     const originalButtonText=btn?.textContent;
     if(btn){btn.disabled=true;btn.textContent="Memproses…";}
     const fd=new FormData(form),p=fd.get("proto");
-    const body={username:fd.get("username"),days:PACKAGE_DAYS,ip_limit:Number(fd.get("ip_limit")),quota_gb:Number(fd.get("quota_gb"))};
+    const body={username:fd.get("username"),days:Number(fd.get("days")||PACKAGE_DAYS),ip_limit:Number(fd.get("ip_limit")),quota_gb:Number(fd.get("quota_gb"))};
     if(p==="ssh")body.password=fd.get("password");
     if(p==="zivpn"&&fd.get("password"))body.password=fd.get("password");
     if(fd.get("uuid"))body.uuid=fd.get("uuid");
-    try{const d=await api(`/api/accounts/${p}`,{method:"POST",body:JSON.stringify(body)});renderCreated(d);await refreshCurrentUser();notice(`Akun berhasil dibuat. Biaya Rp${PACKAGE_PRICE.toLocaleString("id-ID")}.`);}
+    try{const d=await api(`/api/accounts/${p}`,{method:"POST",body:JSON.stringify(body)});renderCreated(d);await refreshCurrentUser();await loadAccounts();notice(`Akun berhasil dibuat. Biaya Rp${Number(d.charged||0).toLocaleString("id-ID")}.`);}
     catch(err){errorNotice(err);}finally{
       createRequestInProgress=false;
       if(btn){btn.disabled=false;btn.textContent=originalButtonText||"Buat Akun";}
@@ -228,7 +234,7 @@ function bindCreate(){
 }
 
 function accountRows(data){
-  const rows=Array.isArray(data)?data:(data.data||[]);state.accounts=rows;
+  const rows=Array.isArray(data)?data:(data.accounts||data.data||[]);state.accounts=rows;
   const search=$("#accountSearch")?.value.toLowerCase()||"";
   const filtered=rows.filter(a=>String(a.username||a.user||"").toLowerCase().includes(search));
   if(!filtered.length)return '<div class="empty">Tidak ada akun yang cocok.</div>';
