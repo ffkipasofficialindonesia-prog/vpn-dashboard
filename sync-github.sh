@@ -6,16 +6,11 @@ cd "$(dirname "$0")"
 BRANCH="$(git branch --show-current)"
 
 if [ "$BRANCH" != "main" ]; then
-  echo "ERROR: Branch bukan main: $BRANCH"
+  echo "ERROR: Branch bukan main."
   exit 1
 fi
 
 git add -A
-
-if git diff --cached --quiet; then
-  echo "Tidak ada perubahan untuk dikirim."
-  exit 0
-fi
 
 if git diff --cached --name-only | grep -E '(^|/)\.env($|\.)|^data/|(^|/)[^/]*backup-' ; then
   echo "ERROR: File rahasia atau backup terdeteksi. Push dibatalkan."
@@ -23,7 +18,12 @@ if git diff --cached --name-only | grep -E '(^|/)\.env($|\.)|^data/|(^|/)[^/]*ba
   exit 1
 fi
 
-git commit -m "Update dashboard from VPS"
+if ! git diff --cached --quiet; then
+  git commit -m "Update dashboard from VPS"
+else
+  echo "Tidak ada commit baru. Mengirim commit yang tertunda..."
+fi
+
 git push origin main
 
-echo "BERHASIL: perubahan VPS sudah dikirim ke GitHub."
+echo "BERHASIL: GitHub sudah menerima perubahan VPS."
