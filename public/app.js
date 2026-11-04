@@ -206,7 +206,7 @@ function renderCreated(response, meta={}){
     ["Masa aktif",d.expired],
     ["Host",d.connection?.host||d.domain],
     ["NS Domain",d.connection?.slowdns_host||d.ns_domain],
-    ["Batas IP",ipLimit],
+    ["Batas IP",Number(ipLimit)===0?"Tanpa Batas":ipLimit],
     ["Kuota (GB)",quota]
   ];
 
@@ -378,7 +378,7 @@ function accountRows(data){
   if(!filtered.length)return '<div class="empty">Tidak ada akun yang cocok.</div>';
   return `<div class="account-card-grid">${filtered.map(a=>{
     const u=a.username||a.user||"",locked=!!a.locked,expired=a.expired||a.expires_at||"-";
-    return `<article class="account-card"><div class="account-card-top"><div class="account-avatar">${esc(String(u||"?").slice(0,1).toUpperCase())}</div><div class="account-identity"><strong>${esc(u||"-")}</strong><span>VPN Account</span></div><span class="badge ${locked?"off":""}">${locked?"LOCKED":esc(a.status||"ACTIVE")}</span></div><div class="account-details"><div><span>Expired</span><b>${esc(String(expired))}</b></div><div><span>Kuota</span><b>${esc(a.quota_gb??a.quota_bytes??"-")}</b></div><div><span>Batas IP</span><b>${esc(a.ip_limit??"-")}</b></div></div><div class="account-card-actions"><button class="mini" data-action="renew" data-user="${escAttr(u)}">↻ Renew</button><button class="mini" data-action="${locked?"unlock":"lock"}" data-user="${escAttr(u)}">${locked?"Unlock":"Lock"}</button><button class="mini danger" data-action="delete" data-user="${escAttr(u)}">Hapus</button></div></article>`;
+    return `<article class="account-card"><div class="account-card-top"><div class="account-avatar">${esc(String(u||"?").slice(0,1).toUpperCase())}</div><div class="account-identity"><strong>${esc(u||"-")}</strong><span>VPN Account</span></div><span class="badge ${locked?"off":""}">${locked?"LOCKED":esc(a.status||"ACTIVE")}</span></div><div class="account-details"><div><span>Expired</span><b>${esc(String(expired))}</b></div><div><span>Kuota</span><b>${esc(a.quota_gb??a.quota_bytes??"-")}</b></div><div><span>Batas IP</span><b>${esc(Number(a.ip_limit)===0?"Tanpa Batas":(a.ip_limit??"-"))}</b></div></div><div class="account-card-actions"><button class="mini" data-action="renew" data-user="${escAttr(u)}">↻ Renew</button><button class="mini" data-action="${locked?"unlock":"lock"}" data-user="${escAttr(u)}">${locked?"Unlock":"Lock"}</button><button class="mini danger" data-action="delete" data-user="${escAttr(u)}">Hapus</button></div></article>`;
   }).join("")}</div>`;
 }
 async function loadAccounts(){
