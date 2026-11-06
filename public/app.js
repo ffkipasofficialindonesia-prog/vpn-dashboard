@@ -2,10 +2,10 @@ const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 const state = {
   proto: "ssh", accounts: [],
-  serverId: localStorage.getItem("vpnSelectedServer") === "sg3" ? "sg3" : "sg2",
+  serverId: ["sg1","sg2","sg3"].includes(localStorage.getItem("vpnSelectedServer")) ? localStorage.getItem("vpnSelectedServer") : "sg2",
   user: null
 };
-const serverNames = { sg2: "Singapore 2", sg3: "Singapore 3" };
+const serverNames = { sg1: "Singapore 1", sg2: "Singapore 2", sg3: "Singapore 3" };
 const protoNames = {ssh:"SSH",vmess:"VMess",vless:"VLESS",trojan:"Trojan",zivpn:"ZiVPN"};
 const PACKAGE_DAYS = 30;
 const PACKAGE_PRICE = 5000;
@@ -160,7 +160,7 @@ function bindNavigation(){
   if(serverSelect){
     serverSelect.value=state.serverId; updateServerLabel();
     serverSelect.addEventListener("change",()=>{
-      state.serverId=serverSelect.value==="sg3"?"sg3":"sg2";
+      state.serverId=["sg1","sg2","sg3"].includes(serverSelect.value)?serverSelect.value:"sg2";
       localStorage.setItem("vpnSelectedServer",state.serverId); updateServerLabel();
       notice(`Server aktif: ${serverNames[state.serverId]}`);
       const current=$(".page:not(.hidden)")?.id.replace("page-","")||"dashboard";
@@ -508,7 +508,7 @@ function renderMembers(){
     return `<tr>
       <td data-label="Member"><span class="user">${esc(u.username)}</span><small class="member-id">${esc(String(u.id).slice(0,8))}</small></td>
       <td data-label="Saldo"><strong class="member-balance">${money(u.balance)}</strong></td>
-      <td data-label="Akses server"><div class="server-toggles"><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg2" ${servers.includes("sg2")?"checked":""}> SG2</label><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg3" ${servers.includes("sg3")?"checked":""}> SG3</label></div></td>
+      <td data-label="Akses server"><div class="server-toggles"><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg1" ${servers.includes("sg1")?"checked":""}> SG1</label><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg2" ${servers.includes("sg2")?"checked":""}> SG2</label><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg3" ${servers.includes("sg3")?"checked":""}> SG3</label></div></td>
       <td data-label="Status"><span class="badge ${u.active===false?"off":""}">${u.active===false?"NONAKTIF":"AKTIF"}</span></td>
       <td data-label="Tambah saldo"><div class="topup-control"><input type="number" min="1" step="1" inputmode="numeric" placeholder="Nominal Rp" aria-label="Nominal saldo ${escAttr(u.username)}" data-topup-amount="${escAttr(u.id)}"><button class="mini topup-btn" data-member-action="topup" data-id="${escAttr(u.id)}">＋ Tambah</button></div></td>
       <td data-label="Aksi"><div class="actions"><button class="mini" data-member-action="toggle" data-id="${escAttr(u.id)}">${u.active===false?"Aktifkan":"Nonaktifkan"}</button><button class="mini danger" data-member-action="delete" data-id="${escAttr(u.id)}">Hapus</button></div></td>

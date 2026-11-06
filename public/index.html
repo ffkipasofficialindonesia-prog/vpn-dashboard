@@ -23,7 +23,7 @@
     </aside>
 
     <main class="main">
-      <header class="topbar"><div><p class="eyebrow">VPN MANAGEMENT</p><h1 id="pageTitle">Dashboard</h1></div><div class="topbar-actions"><label class="server-picker">SERVER AKTIF<select id="serverSelect" aria-label="Pilih server"><option value="sg2">SG2 — Singapore 2</option><option value="sg3">SG3 — Singapore 3</option></select></label><div class="profile"><div class="avatar">M</div><span id="selectedServerName">Singapore 2</span><span id="headerBalance" class="balance-chip hidden">Rp0</span></div></div></header>
+      <header class="topbar"><div><p class="eyebrow">VPN MANAGEMENT</p><h1 id="pageTitle">Dashboard</h1></div><div class="topbar-actions"><label class="server-picker">SERVER AKTIF<select id="serverSelect" aria-label="Pilih server"><option value="sg1">SG1 — Singapore 1</option><option value="sg2">SG2 — Singapore 2</option><option value="sg3">SG3 — Singapore 3</option></select></label><div class="profile"><div class="avatar">M</div><span id="selectedServerName">Singapore 2</span><span id="headerBalance" class="balance-chip hidden">Rp0</span></div></div></header>
       <div id="notice" class="notice hidden"></div>
 
       <section id="page-dashboard" class="page">
@@ -66,7 +66,7 @@
           <form id="memberForm" class="form-grid">
             <label>Username<input name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.-]{3,32}" placeholder="contoh: pelanggan01" autocomplete="off"></label>
             <label>Password<input name="password" type="password" required minlength="6" maxlength="128" placeholder="Minimal 6 karakter" autocomplete="new-password"></label>
-            <fieldset class="server-access"><legend>Akses server</legend><label class="check-option"><input type="checkbox" name="servers" value="sg2" checked> SG2 — Singapore 2</label><label class="check-option"><input type="checkbox" name="servers" value="sg3"> SG3 — Singapore 3</label></fieldset>
+            <fieldset class="server-access"><legend>Akses server</legend><label class="check-option"><input type="checkbox" name="servers" value="sg1"> SG1 — Singapore 1</label><label class="check-option"><input type="checkbox" name="servers" value="sg2" checked> SG2 — Singapore 2</label><label class="check-option"><input type="checkbox" name="servers" value="sg3"> SG3 — Singapore 3</label></fieldset>
             <div class="form-actions"><button class="primary" type="submit">＋ Buat member</button></div>
           </form>
         </div>

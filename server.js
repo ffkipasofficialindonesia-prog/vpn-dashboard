@@ -40,6 +40,15 @@ function cleanApiBase(value, fallback) {
 }
 
 const SERVERS = {
+  sg1: {
+    id: "sg1",
+    name: "Singapore 1",
+    base: cleanApiBase(
+      process.env.VPN_SG1_API_BASE_URL,
+      "https://sg1.misubufuruvpn.my.id/api/v1"
+    ),
+    key: cleanApiKey(process.env.VPN_SG1_API_KEY)
+  },
   sg2: {
     id: "sg2",
     name: "Singapore 2",
@@ -376,7 +385,7 @@ async function initializeAdmin() {
     salt: credentials.salt,
     passwordHash: credentials.hash,
     balance: 0,
-    servers: ["sg2", "sg3"],
+    servers: ["sg1", "sg2", "sg3"],
     active: true,
     createdAt: new Date().toISOString()
   });
@@ -694,7 +703,7 @@ app.get("/api/me", auth, (req, res) => {
 
 app.get("/api/servers", auth, (req, res) => {
   const allowed = req.user.role === "admin"
-    ? ["sg2", "sg3"]
+    ? ["sg1", "sg2", "sg3"]
     : req.user.servers;
 
   res.json({
@@ -1568,7 +1577,7 @@ initializeAdmin()
     app.listen(PORT, HOST, () => {
       console.log(`VPN dashboard running at http://${HOST}:${PORT}`);
       console.log("Role system: Admin + Member");
-      console.log("Servers: SG2 + SG3");
+      console.log("Servers: SG1 + SG2 + SG3");
     });
   })
   .catch(error => {
