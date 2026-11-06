@@ -150,3 +150,342 @@ label{display:grid;gap:8px;color:#b9c6d8;font-size:12px;font-weight:600}input,se
 /* Customizable sidebar logo: replace public/assets/logo.svg to change the image. */
 .brand-logo{width:40px;height:40px;flex:0 0 40px;object-fit:contain;border-radius:12px;display:block}.brand-copy{min-width:0}.brand-logo[hidden],.brand-mark[hidden]{display:none!important}
 @media(max-width:760px){.brand-logo{width:36px;height:36px;flex-basis:36px}}
+
+
+/* Header server dan saldo versi baru */
+.profile .avatar {
+  display: none !important;
+}
+
+.profile {
+  gap: 12px;
+  color: #dce9fa;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#selectedServerName {
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+
+.balance-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(74, 222, 170, .35);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #123c35, #102b2c);
+  color: #78f0c1;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, .10);
+  font-variant-numeric: tabular-nums;
+}
+
+#headerBalance:not(.hidden)::before {
+  content: "◈";
+  font-size: 15px;
+  color: #5ee6b2;
+}
+
+@media(max-width:760px) {
+  .profile {
+    gap: 8px;
+    font-size: 12px;
+  }
+  .balance-chip {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
+/* Rapikan alignment header */
+.topbar {
+  align-items: center;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.server-picker {
+  align-self: center;
+  margin: 0;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  min-height: 40px;
+  margin: 0;
+}
+
+#selectedServerName {
+  display: none;
+}
+
+#headerBalance:not(.hidden) {
+  position: relative;
+  top: 2px;
+  margin: 0;
+  vertical-align: middle;
+}
+
+@media(max-width:760px) {
+  .topbar-actions {
+    align-items: center;
+  }
+
+  .server-picker {
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .profile {
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Rapikan alignment header */
+.topbar {
+  align-items: center;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.server-picker {
+  align-self: center;
+  margin: 0;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  min-height: 40px;
+  margin: 0;
+}
+
+#selectedServerName {
+  display: none;
+}
+
+#headerBalance:not(.hidden) {
+  position: relative;
+  top: 2px;
+  margin: 0;
+  vertical-align: middle;
+}
+
+@media(max-width:760px) {
+  .topbar-actions {
+    align-items: center;
+  }
+
+  .server-picker {
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .profile {
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* FINAL FIX: posisi header khusus layar HP */
+@media screen and (max-width: 760px) {
+  .topbar {
+    display: flex !important;
+    align-items: flex-start !important;
+  }
+
+  .topbar-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+    transform: none !important;
+    gap: 10px !important;
+  }
+
+  .server-picker {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    margin: 0 !important;
+  }
+
+  .server-picker select {
+    margin: 0 !important;
+  }
+
+  .profile {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #headerBalance:not(.hidden) {
+    position: static !important;
+    transform: translateY(0) !important;
+    margin: 0 !important;
+  }
+}
+
+/* Naikkan posisi pilihan server dan saldo di HP */
+@media screen and (max-width: 760px) {
+  .topbar-actions {
+    margin-top: 0 !important;
+    transform: translateY(-15px) !important;
+  }
+}
+
+/* FINAL FIX: posisi header khusus layar HP */
+@media screen and (max-width: 760px) {
+  .topbar {
+    display: flex !important;
+    align-items: flex-start !important;
+  }
+
+  .topbar-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+    transform: none !important;
+    gap: 10px !important;
+  }
+
+  .server-picker {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    margin: 0 !important;
+  }
+
+  .server-picker select {
+    margin: 0 !important;
+  }
+
+  .profile {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #headerBalance:not(.hidden) {
+    position: static !important;
+    transform: translateY(0) !important;
+    margin: 0 !important;
+  }
+}
+
+/* Saldo di kanan atas, pilihan server tetap di kiri */
+@media screen and (max-width: 760px) {
+  .topbar-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    position: relative !important;
+    margin-top: 0 !important;
+    transform: translateY(-15px) !important;
+  }
+
+  .server-picker {
+    margin-right: auto !important;
+  }
+
+  .profile {
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
+  }
+
+  #headerBalance:not(.hidden) {
+    margin-left: auto !important;
+  }
+}
+
+/* Header: saldo di samping VPN CONTROL, server di bawah */
+@media screen and (max-width: 760px) {
+  .topbar {
+    position: relative !important;
+    padding-top: 0 !important;
+  }
+
+  .topbar-actions {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .profile {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+
+  #headerBalance:not(.hidden) {
+    position: static !important;
+    display: inline-flex !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .server-picker {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    margin-top: 18px !important;
+    position: relative !important;
+  }
+}
+
+/* Beri jarak antara pilihan server dan tombol keluar */
+@media screen and (max-width: 760px) {
+  #logoutBtn,
+  .logout-btn,
+  button[data-action="logout"] {
+    margin-top: 14px !important;
+  }
+
+  .server-picker {
+    margin-bottom: 14px !important;
+  }
+}

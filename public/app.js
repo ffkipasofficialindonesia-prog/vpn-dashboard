@@ -14,13 +14,30 @@ function serverHeader(){ return { "X-VPN-Server": state.serverId }; }
 function money(value){ return `Rp${Number(value||0).toLocaleString("id-ID")}`; }
 function updateServerLabel(){
   const label=$("#selectedServerName");
-  if(label) label.textContent = `${state.user?.username || "Akun"} · ${serverNames[state.serverId] || "Singapore 2"}`;
+  if(label) label.textContent = "";
   const select=$("#serverSelect");
   if(select) select.value=state.serverId;
   const balance=Number(state.user?.balance||0);
+  const topupButton=$("#topupBtn");
+  if(topupButton) topupButton.classList.toggle("hidden",state.user?.role!=="member");
   const chip=$("#headerBalance");
   if(chip){chip.textContent=money(balance);chip.classList.toggle("hidden",!state.user||state.user.role==="admin");}
 }
+
+$("#topupBtn")?.addEventListener("click",()=>{
+  if(state.user?.role!=="member") return;
+  const username=state.user.username || "Tidak diketahui";
+  const balance=money(state.user.balance);
+  const message=[
+    "Halo Admin, saya ingin top up saldo VPN.",
+    `Username: ${username}`,
+    `Saldo saat ini: ${balance}`,
+    "Mohon informasi pembayaran. Terima kasih."
+  ].join("\\n");
+  const url=`https://wa.me/6283115730605?text=${encodeURIComponent(message)}`;
+  window.open(url,"_blank","noopener,noreferrer");
+});
+
 async function refreshCurrentUser(){
   try{
     const result=await api("/api/me");
@@ -44,7 +61,13 @@ async function api(url, options={}) {
     credentials: "same-origin",
     cache: "no-store"
   });
-  const data = await res.json().catch(()=>({message:"Respons server tidak valid."}));
+  const raw = await res.text();
+  let data = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    data = {message: `Server mengirim respons bukan JSON (HTTP ${res.status}). ${raw.slice(0, 180)}`};
+  }
   if (!res.ok) {
     if (res.status === 401 && !["/api/auth/login", "/api/auth/me", "/api/auth/logout"].includes(url)) {
       state.user = null;
@@ -81,32 +104,167 @@ function showLogin(message=""){
   const appView=$("#appView");
   if(appView) appView.classList.add("hidden");
   injectLoginStyles();
+
   let view=$("#loginView");
   if(!view){
     view=document.createElement("section");
     view.id="loginView";
-    view.innerHTML=`<form class="login-card" id="loginForm" autocomplete="on">
-      <div class="login-brand">VPN CONTROL</div><h1>Masuk ke panel</h1>
-      <p>Login untuk mengelola akun VPN dan server.</p>
-      <label for="loginUsername">Username</label><input id="loginUsername" name="username" autocomplete="username" required maxlength="32">
-      <label for="loginPassword">Password</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
-      <button type="submit" id="loginSubmit">Login</button><div id="loginError" role="alert"></div>
-    </form>`;
+    view.innerHTML=`
+      <div class="login-card" id="loginCard">
+        <div class="login-brand">VPN CONTROL</div>
+
+        <form id="loginForm" autocomplete="on">
+          <h1>Masuk ke panel</h1>
+          <p>Login untuk mengelola akun VPN dan server.</p>
+          <label for="loginUsername">Username</label>
+          <input id="loginUsername" name="username" autocomplete="username" required maxlength="32">
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+          <button type="submit" id="loginSubmit">Login</button>
+          <div id="loginError" role="alert"></div>
+          <p style="text-align:center;margin-top:18px">
+            Belum punya akun?
+            <button type="button" id="showRegister" style="background:transparent;padding:4px;color:#60a5fa">Daftar member baru</button>
+          </p>
+        </form>
+
+        <form id="registerForm" style="display:none" autocomplete="off">
+          <h1>Daftar Member</h1>
+          <p>Daftar menggunakan email untuk menerima kode OTP.</p>
+
+          <label for="regUsername">Username</label>
+          <input id="regUsername" maxlength="32" required placeholder="Username">
+
+          <label for="regEmail">Email Gmail</label>
+          <input id="regEmail" type="email" required placeholder="nama@gmail.com">
+
+          <label for="regPassword">Password</label>
+          <input id="regPassword" type="password" minlength="6" maxlength="128" required placeholder="Minimal 6 karakter">
+
+          <button type="button" id="requestOtp">Kirim kode OTP</button>
+
+          <div id="otpArea" style="display:none">
+            <label for="regOtp">Kode OTP 6 digit</label>
+            <input id="regOtp" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="Masukkan kode dari email">
+            <button type="submit" id="verifyOtp">Verifikasi dan Daftar</button>
+          </div>
+
+          <div id="registerError" role="alert"></div>
+          <p style="text-align:center;margin-top:18px">
+            Sudah punya akun?
+            <button type="button" id="showLogin" style="background:transparent;padding:4px;color:#60a5fa">Kembali ke login</button>
+          </p>
+        </form>
+      </div>`;
     document.body.prepend(view);
+
     $("#loginForm").addEventListener("submit", async e=>{
       e.preventDefault();
       const button=$("#loginSubmit"), error=$("#loginError");
-      button.disabled=true; button.textContent="Memeriksa..."; error.textContent="";
+      button.disabled=true;
+      button.textContent="Memeriksa...";
+      error.textContent="";
       try{
-        const body={username:$("#loginUsername").value.trim(),password:$("#loginPassword").value};
-        const result=await api("/api/auth/login",{method:"POST",body:JSON.stringify(body)});
+        const body={
+          username:$("#loginUsername").value.trim(),
+          password:$("#loginPassword").value
+        };
+        const result=await api("/api/auth/login",{
+          method:"POST",
+          body:JSON.stringify(body)
+        });
         state.user=result.user;
         view.remove();
         await enterApp();
-      }catch(err){error.textContent=err.message||"Login gagal.";}
-      finally{button.disabled=false;button.textContent="Login";}
+      }catch(err){
+        error.textContent=err.message||"Login gagal.";
+      }finally{
+        button.disabled=false;
+        button.textContent="Login";
+      }
+    });
+
+    $("#showRegister").addEventListener("click",()=>{
+      $("#loginForm").style.display="none";
+      $("#registerForm").style.display="block";
+      $("#registerError").textContent="";
+      $("#regUsername").focus();
+    });
+
+    $("#showLogin").addEventListener("click",()=>{
+      $("#registerForm").style.display="none";
+      $("#loginForm").style.display="block";
+      $("#loginError").textContent="";
+      $("#loginUsername").focus();
+    });
+
+    $("#requestOtp").addEventListener("click",async()=>{
+      const button=$("#requestOtp");
+      const error=$("#registerError");
+      error.textContent="";
+
+      const username=$("#regUsername").value.trim();
+      const email=$("#regEmail").value.trim().toLowerCase();
+      const password=$("#regPassword").value;
+
+      if(!username || !email || password.length<6){
+        error.textContent="Isi username, email, dan password minimal 6 karakter.";
+        return;
+      }
+
+      button.disabled=true;
+      button.textContent="Mengirim OTP...";
+
+      try{
+        const result=await api("/api/auth/register/request-otp",{
+          method:"POST",
+          body:JSON.stringify({username,email,password})
+        });
+        error.textContent=result.message||"OTP berhasil dikirim. Periksa email kamu.";
+        $("#otpArea").style.display="block";
+        $("#regOtp").required=true;
+        $("#regOtp").focus();
+      }catch(err){
+        error.textContent=err.message||"Gagal mengirim OTP.";
+      }finally{
+        button.disabled=false;
+        button.textContent="Kirim kode OTP";
+      }
+    });
+
+    $("#registerForm").addEventListener("submit",async e=>{
+      e.preventDefault();
+      const button=$("#verifyOtp");
+      const error=$("#registerError");
+      const email=$("#regEmail").value.trim().toLowerCase();
+      const otp=$("#regOtp").value.trim();
+
+      if(!/^\d{6}$/.test(otp)){
+        error.textContent="Masukkan kode OTP 6 digit.";
+        return;
+      }
+
+      button.disabled=true;
+      button.textContent="Memverifikasi...";
+      error.textContent="";
+
+      try{
+        const result=await api("/api/auth/register/verify",{
+          method:"POST",
+          body:JSON.stringify({email,otp})
+        });
+        state.user=result.user;
+        view.remove();
+        await enterApp();
+      }catch(err){
+        error.textContent=err.message||"Verifikasi gagal.";
+      }finally{
+        button.disabled=false;
+        button.textContent="Verifikasi dan Daftar";
+      }
     });
   }
+
   $("#loginError").textContent=message;
   view.classList.remove("hidden");
   $("#loginUsername")?.focus();
@@ -125,10 +283,17 @@ function showApp(){
     role.textContent=state.user?.role || "member";
     let logout=$("#logoutBtn");
     if(!logout){logout=document.createElement("button");logout.id="logoutBtn";logout.className="secondary";logout.textContent="Keluar";profile.after(logout);}
-    logout.onclick=async()=>{
+    logout.onclick=()=>{
       logout.disabled=true;
-      try{await api("/api/auth/logout",{method:"POST"});}catch{}
-      state.user=null; showLogin("Silakan login kembali.");
+      state.user=null;
+      showLogin("Kamu berhasil keluar.");
+
+      fetch("/api/auth/logout",{
+        method:"POST",
+        credentials:"same-origin",
+        cache:"no-store",
+        keepalive:true
+      }).catch(()=>{});
     };
   }
 }

@@ -25,15 +25,19 @@ const MEMBER_BASE_IP = 2;
 const MEMBER_EXTRA_IP_PRICE = 2000;
 const V2RAY_PROTOCOLS = new Set(["vmess", "vless", "trojan"]);
 
-// Gmail SMTP (gunakan Gmail App Password, bukan password Gmail utama).
-const SMTP_USER = String(process.env.GMAIL_USER || "").trim();
-const SMTP_PASS = String(process.env.GMAIL_APP_PASSWORD || "").replace(/\\s+/g, "");
-const mailTransporter = SMTP_USER && SMTP_PASS
+// Resend SMTP
+const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
+const RESEND_FROM_EMAIL = String(process.env.RESEND_FROM_EMAIL || "").trim();
+
+const mailTransporter = RESEND_API_KEY && RESEND_FROM_EMAIL
   ? nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: "smtp.resend.com",
       port: 465,
       secure: true,
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
+      auth: {
+        user: "resend",
+        pass: RESEND_API_KEY
+      }
     })
   : null;
 
@@ -49,7 +53,7 @@ function normalizeEmail(value) {
 }
 
 function validEmail(value) {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(value) && value.length <= 254;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value) && value.length <= 254;
 }
 
 function otpDigest(email, code) {
@@ -671,11 +675,11 @@ async function refundBalance(userId, amount, description) {
 // AUTH
 // --------------------------------------------------
 
-// Registrasi member mandiri: kirim OTP ke email Gmail.
+// Registrasi member mandiri: kirim OTP melalui Resend.
 app.post("/api/auth/register/request-otp", async (req, res) => {
   if (!mailTransporter) {
     return res.status(503).json({
-      message: "Fitur email belum dikonfigurasi. Admin perlu mengatur GMAIL_USER dan GMAIL_APP_PASSWORD di .env."
+      message: "Fitur email belum dikonfigurasi. Admin perlu mengatur RESEND_API_KEY dan RESEND_FROM_EMAIL di .env."
     });
   }
 
@@ -718,7 +722,7 @@ app.post("/api/auth/register/request-otp", async (req, res) => {
 
   try {
     await mailTransporter.sendMail({
-      from: `"VPN Control" <${SMTP_USER}>`,
+      from: `"VPN Control" <${RESEND_FROM_EMAIL}>`,
       to: email,
       subject: "Kode verifikasi VPN Control",
       text: `Kode OTP registrasi VPN Control kamu: ${code}\\n\\nKode berlaku selama 10 menit. Jangan bagikan kode ini kepada siapa pun.`,
@@ -743,13 +747,13 @@ app.post("/api/auth/register/request-otp", async (req, res) => {
     registrationRate.set(ip, currentRate);
 
     return res.json({
-      message: "Kode OTP berhasil dikirim. Periksa inbox atau folder spam Gmail kamu.",
+      message: "Kode OTP berhasil dikirim. Periksa inbox atau folder spam email kamu.",
       expiresIn: 600,
       resendAfter: 60
     });
   } catch (error) {
     console.error("Gagal mengirim email OTP:", error.message);
-    return res.status(502).json({ message: "Gagal mengirim email OTP. Periksa konfigurasi Gmail pengirim." });
+    return res.status(502).json({ message: "Gagal mengirim email OTP. Periksa konfigurasi Resend dan alamat pengirim." });
   }
 });
 
@@ -757,7 +761,7 @@ app.post("/api/auth/register/verify", async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const code = String(req.body?.otp || "").trim();
 
-  if (!validEmail(email) || !/^\\d{6}$/.test(code)) {
+  if (!validEmail(email) || !/^\d{6}$/.test(code)) {
     return res.status(400).json({ message: "Email atau kode OTP tidak valid." });
   }
 
@@ -865,7 +869,7 @@ app.post("/api/auth/login", loginRateLimit, async (req, res) => {
   });
 });
 
-app.post("/api/auth/logout", auth, (req, res) => {
+app.post("/api/auth/logout", (req, res) => {
   clearSessionCookie(res);
   res.json({ message: "Berhasil logout." });
 });
