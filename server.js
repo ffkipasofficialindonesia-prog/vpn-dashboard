@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -23,6 +24,44 @@ const ACCOUNT_PACKAGE_PRICE = 5000;
 const MEMBER_BASE_IP = 2;
 const MEMBER_EXTRA_IP_PRICE = 2000;
 const V2RAY_PROTOCOLS = new Set(["vmess", "vless", "trojan"]);
+
+// Gmail SMTP (gunakan Gmail App Password, bukan password Gmail utama).
+const SMTP_USER = String(process.env.GMAIL_USER || "").trim();
+const SMTP_PASS = String(process.env.GMAIL_APP_PASSWORD || "").replace(/\\s+/g, "");
+const mailTransporter = SMTP_USER && SMTP_PASS
+  ? nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: SMTP_USER, pass: SMTP_PASS }
+    })
+  : null;
+
+// OTP disimpan sementara di memori; restart server otomatis membatalkan OTP aktif.
+const pendingRegistrations = new Map();
+const registrationRate = new Map();
+const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_RESEND_MS = 60 * 1000;
+const OTP_MAX_ATTEMPTS = 5;
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function validEmail(value) {
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(value) && value.length <= 254;
+}
+
+function otpDigest(email, code) {
+  return crypto.createHmac("sha256", SESSION_SECRET)
+    .update(`${email}:${code}`)
+    .digest("hex");
+}
+
+function registrationIp(req) {
+  return req.ip || req.socket.remoteAddress || "unknown";
+}
+
 function cleanApiKey(value) {
   return String(value || "")
     .trim()
@@ -631,6 +670,154 @@ async function refundBalance(userId, amount, description) {
 // --------------------------------------------------
 // AUTH
 // --------------------------------------------------
+
+// Registrasi member mandiri: kirim OTP ke email Gmail.
+app.post("/api/auth/register/request-otp", async (req, res) => {
+  if (!mailTransporter) {
+    return res.status(503).json({
+      message: "Fitur email belum dikonfigurasi. Admin perlu mengatur GMAIL_USER dan GMAIL_APP_PASSWORD di .env."
+    });
+  }
+
+  const username = String(req.body?.username || "").trim();
+  const email = normalizeEmail(req.body?.email);
+  const password = String(req.body?.password || "");
+  const ip = registrationIp(req);
+  const now = Date.now();
+
+  if (!/^[A-Za-z0-9_.-]{3,32}$/.test(username)) {
+    return res.status(400).json({ message: "Username harus 3–32 karakter (huruf, angka, titik, _ atau -)." });
+  }
+  if (!validEmail(email)) {
+    return res.status(400).json({ message: "Alamat email tidak valid." });
+  }
+  if (password.length < 6 || password.length > 128) {
+    return res.status(400).json({ message: "Password harus 6–128 karakter." });
+  }
+
+  const rate = registrationRate.get(ip);
+  if (rate && rate.count >= 5 && now - rate.startedAt < 60 * 60 * 1000) {
+    return res.status(429).json({ message: "Terlalu banyak permintaan OTP dari jaringan ini. Coba lagi nanti." });
+  }
+
+  const previous = pendingRegistrations.get(email);
+  if (previous && previous.expiresAt > now && previous.lastSentAt + OTP_RESEND_MS > now) {
+    return res.status(429).json({ message: "Tunggu 60 detik sebelum meminta kode OTP lagi." });
+  }
+
+  if (db.users.some(user =>
+    user.username.toLowerCase() === username.toLowerCase() ||
+    (user.email && user.email.toLowerCase() === email)
+  )) {
+    return res.status(409).json({ message: "Username atau email sudah terdaftar." });
+  }
+
+  const code = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
+  const credentials = hashPassword(password);
+  const expiresAt = now + OTP_TTL_MS;
+
+  try {
+    await mailTransporter.sendMail({
+      from: `"VPN Control" <${SMTP_USER}>`,
+      to: email,
+      subject: "Kode verifikasi VPN Control",
+      text: `Kode OTP registrasi VPN Control kamu: ${code}\\n\\nKode berlaku selama 10 menit. Jangan bagikan kode ini kepada siapa pun.`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;color:#172033"><h2>Verifikasi email VPN Control</h2><p>Gunakan kode berikut untuk menyelesaikan pendaftaran:</p><div style="font-size:32px;font-weight:800;letter-spacing:8px;padding:16px;background:#eef3fb;border-radius:12px;text-align:center">${code}</div><p>Kode berlaku selama 10 menit. Jangan bagikan kode ini kepada siapa pun.</p></div>`
+    });
+
+    pendingRegistrations.set(email, {
+      username,
+      email,
+      salt: credentials.salt,
+      passwordHash: credentials.hash,
+      otpHash: otpDigest(email, code),
+      expiresAt,
+      lastSentAt: now,
+      attempts: 0
+    });
+
+    const currentRate = rate && now - rate.startedAt < 60 * 60 * 1000
+      ? rate
+      : { count: 0, startedAt: now };
+    currentRate.count++;
+    registrationRate.set(ip, currentRate);
+
+    return res.json({
+      message: "Kode OTP berhasil dikirim. Periksa inbox atau folder spam Gmail kamu.",
+      expiresIn: 600,
+      resendAfter: 60
+    });
+  } catch (error) {
+    console.error("Gagal mengirim email OTP:", error.message);
+    return res.status(502).json({ message: "Gagal mengirim email OTP. Periksa konfigurasi Gmail pengirim." });
+  }
+});
+
+app.post("/api/auth/register/verify", async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  const code = String(req.body?.otp || "").trim();
+
+  if (!validEmail(email) || !/^\\d{6}$/.test(code)) {
+    return res.status(400).json({ message: "Email atau kode OTP tidak valid." });
+  }
+
+  const pending = pendingRegistrations.get(email);
+  if (!pending || pending.expiresAt < Date.now()) {
+    pendingRegistrations.delete(email);
+    return res.status(400).json({ message: "Kode OTP kedaluwarsa atau belum diminta. Minta kode baru." });
+  }
+
+  pending.attempts++;
+  if (pending.attempts > OTP_MAX_ATTEMPTS) {
+    pendingRegistrations.delete(email);
+    return res.status(429).json({ message: "Batas percobaan OTP terlampaui. Minta kode baru." });
+  }
+
+  const supplied = Buffer.from(otpDigest(email, code), "hex");
+  const expected = Buffer.from(pending.otpHash, "hex");
+  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) {
+    return res.status(400).json({ message: `Kode OTP salah. Sisa percobaan: ${OTP_MAX_ATTEMPTS - pending.attempts}.` });
+  }
+
+  try {
+    const user = await mutateDatabase(() => {
+      if (db.users.some(item =>
+        item.username.toLowerCase() === pending.username.toLowerCase() ||
+        (item.email && item.email.toLowerCase() === email)
+      )) {
+        const error = new Error("Username atau email sudah terdaftar. Silakan login.");
+        error.status = 409;
+        throw error;
+      }
+
+      const newUser = {
+        id: makeId(),
+        username: pending.username,
+        email,
+        role: "member",
+        salt: pending.salt,
+        passwordHash: pending.passwordHash,
+        balance: 0,
+        servers: ["sg2"],
+        active: true,
+        emailVerified: true,
+        createdAt: new Date().toISOString()
+      };
+
+      db.users.push(newUser);
+      return newUser;
+    });
+
+    pendingRegistrations.delete(email);
+    setSessionCookie(res, signSession(user));
+    return res.status(201).json({
+      message: "Email berhasil diverifikasi. Akun member kamu sudah aktif.",
+      user: publicUser(user)
+    });
+  } catch (error) {
+    errorResponse(res, error);
+  }
+});
 
 app.post("/api/auth/login", loginRateLimit, async (req, res) => {
   const username = String(req.body?.username || "").trim();
