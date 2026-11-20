@@ -1,7 +1,8 @@
-LOGO VPN CONTROL
+LOGO misubufuru
 
-Untuk mengganti logo kiri atas, timpa file logo.svg ini dengan logo milik Anda (gunakan nama logo.svg).
-Lokasi file: public/assets/logo.svg
+Logo kiri atas, halaman login, dan favicon memakai file ini: public/assets/logo.svg
 URL yang dipakai aplikasi: /assets/logo.svg
 
-Format SVG disarankan. Untuk PNG/JPG, ubah src pada elemen .brand-logo di public/index.html menjadi /assets/logo.png atau /assets/logo.jpg.
+Untuk menggantinya, timpa logo.svg dengan nama yang sama (SVG disarankan).
+Untuk PNG/JPG, ubah src pada .brand-logo di public/index.html, .welcome-mascot di
+public/index.html, dan .login-mascot di public/app.js.
