@@ -85,17 +85,27 @@ function injectLoginStyles(){
   const style=document.createElement("style");
   style.id="loginStyles";
   style.textContent=`
-    #loginView{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 10%,#172b48 0,transparent 38%),#080d17;color:#edf4ff;font-family:inherit}
-    #loginView .login-card{width:min(420px,100%);padding:32px;border:1px solid #27364c;border-radius:22px;background:#101a2a;box-shadow:0 24px 80px #0008}
-    #loginView .login-brand{font-size:13px;letter-spacing:2px;color:#8ba9cf;font-weight:800}
-    #loginView h1{font-size:28px;margin:12px 0 8px} #loginView p{color:#9aabc2;line-height:1.6}
-    #loginView label{display:block;margin:18px 0 7px;color:#b9c7d9;font-size:13px}
-    #loginView input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #34465f;border-radius:10px;background:#0a1220;color:#fff;font:inherit;outline:none}
-    #loginView input:focus{border-color:#69a7ff}
-    #loginView button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:10px;background:#4d91ef;color:#fff;font-weight:800;font:inherit;cursor:pointer}
-    #loginError{margin-top:12px;color:#ff8585;font-size:13px;min-height:18px}
+    #loginView{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% -10%,#2A2160 0,transparent 55%),#0E1422;color:#EEF0FF;font-family:inherit}
+    #loginView .login-card{width:min(420px,100%);padding:34px 32px 30px;border:1px solid #263052;border-radius:24px;background:#151D32;box-shadow:0 24px 70px #0007}
+    #loginView .login-head{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:6px}
+    #loginView .login-mascot{width:92px;height:92px;display:block}
+    #loginView .login-brand{font:700 22px 'Poppins',sans-serif;letter-spacing:-.01em;color:#fff;text-align:center}
+    #loginView .login-brand small{display:block;margin-top:2px;font:600 10px 'DM Sans',sans-serif;letter-spacing:.32em;color:#2DD4BF}
+    #loginView h1{font-size:22px;margin:18px 0 6px;text-align:center} #loginView p{color:#8E98B8;line-height:1.6;text-align:center;margin:0 0 4px}
+    #loginView label{display:block;margin:18px 0 7px;color:#B8C0E0;font-size:13px}
+    #loginView input{width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #2C3760;border-radius:12px;background:#0E1426;color:#fff;font:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+    #loginView input:focus{border-color:#A78BFA;box-shadow:0 0 0 3px #A78BFA26}
+    #loginView button{width:100%;margin-top:22px;padding:13px;border:0;border-radius:12px;background:#A78BFA;color:#1B1340;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #6D4FD6;transition:transform .08s,box-shadow .08s,background .15s}
+    #loginView button:hover{background:#B79DFF}
+    #loginView button:active{transform:translateY(3px);box-shadow:0 0 0 #6D4FD6}
+    #loginView button:disabled{opacity:.55;cursor:wait;transform:none;box-shadow:0 3px 0 #6D4FD6}
+    #loginView button:focus-visible{outline:2px solid #2DD4BF;outline-offset:2px}
+    #loginView .linkbtn{width:auto;margin:0;padding:4px 6px;background:transparent;box-shadow:none;color:#C4B5FD;font-weight:700;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#A78BFA66}
+    #loginView .linkbtn:hover{background:transparent;color:#fff}
+    #loginView .linkbtn:active{transform:none;box-shadow:none}
+    #loginError,#registerError{margin-top:12px;color:#FDA4B4;font-size:13px;min-height:18px;text-align:center}
     #logoutBtn{margin-left:8px;white-space:nowrap}
-    .role-chip{font-size:11px;color:#9fb8d8;margin-left:8px;text-transform:uppercase}
+    .role-chip{font-size:10px;font-weight:700;letter-spacing:.08em;color:#C4B5FD;background:#241E52;border-radius:6px;padding:3px 7px;margin-left:8px;text-transform:uppercase}
   `;
   document.head.appendChild(style);
 }
@@ -111,7 +121,7 @@ function showLogin(message=""){
     view.id="loginView";
     view.innerHTML=`
       <div class="login-card" id="loginCard">
-        <div class="login-brand">VPN CONTROL</div>
+        <div class="login-head"><img class="login-mascot" src="/assets/logo.svg" alt=""><div class="login-brand">misubufuru<small>PUBLIC VPN</small></div></div>
 
         <form id="loginForm" autocomplete="on">
           <h1>Masuk ke panel</h1>
@@ -124,7 +134,7 @@ function showLogin(message=""){
           <div id="loginError" role="alert"></div>
           <p style="text-align:center;margin-top:18px">
             Belum punya akun?
-            <button type="button" id="showRegister" style="background:transparent;padding:4px;color:#60a5fa">Daftar member baru</button>
+            <button type="button" id="showRegister" class="linkbtn">Daftar member baru</button>
           </p>
         </form>
 
@@ -152,7 +162,7 @@ function showLogin(message=""){
           <div id="registerError" role="alert"></div>
           <p style="text-align:center;margin-top:18px">
             Sudah punya akun?
-            <button type="button" id="showLogin" style="background:transparent;padding:4px;color:#60a5fa">Kembali ke login</button>
+            <button type="button" id="showLogin" class="linkbtn">Kembali ke login</button>
           </p>
         </form>
       </div>`;
@@ -543,7 +553,7 @@ function accountRows(data){
   if(!filtered.length)return '<div class="empty">Tidak ada akun yang cocok.</div>';
   return `<div class="account-card-grid">${filtered.map(a=>{
     const u=a.username||a.user||"",locked=!!a.locked,expired=a.expired||a.expires_at||"-";
-    return `<article class="account-card"><div class="account-card-top"><div class="account-avatar">${esc(String(u||"?").slice(0,1).toUpperCase())}</div><div class="account-identity"><strong>${esc(u||"-")}</strong><span>VPN Account</span></div><span class="badge ${locked?"off":""}">${locked?"LOCKED":esc(a.status||"ACTIVE")}</span></div><div class="account-details"><div><span>Expired</span><b>${esc(String(expired))}</b></div><div><span>Kuota</span><b>${esc(a.quota_gb??a.quota_bytes??"-")}</b></div><div><span>Batas IP</span><b>${esc(Number(a.ip_limit)===0?"Tanpa Batas":(a.ip_limit??"-"))}</b></div></div><div class="account-card-actions"><button class="mini" data-action="renew" data-user="${escAttr(u)}">↻ Renew</button><button class="mini" data-action="${locked?"unlock":"lock"}" data-user="${escAttr(u)}">${locked?"Unlock":"Lock"}</button><button class="mini danger" data-action="delete" data-user="${escAttr(u)}">Hapus</button></div></article>`;
+    return `<article class="account-card"><div class="account-card-top"><div class="account-avatar">${esc(String(u||"?").slice(0,1).toUpperCase())}</div><div class="account-identity"><strong>${esc(u||"-")}</strong><span>VPN Account</span></div><span class="badge ${locked?"off":""}">${locked?"LOCKED":esc(a.status||"ACTIVE")}</span></div><div class="account-details"><div><span>Expired</span><b>${esc(String(expired))}</b></div><div><span>Kuota</span><b>${esc(a.quota_gb??a.quota_bytes??"-")}</b></div><div><span>Batas IP</span><b>${esc(Number(a.ip_limit)===0?"Tanpa Batas":(a.ip_limit??"-"))}</b></div></div><div class="account-card-actions"><button class="mini" data-action="renew" data-user="${escAttr(u)}">Renew</button><button class="mini" data-action="${locked?"unlock":"lock"}" data-user="${escAttr(u)}">${locked?"Unlock":"Lock"}</button><button class="mini danger" data-action="delete" data-user="${escAttr(u)}">Hapus</button></div></article>`;
   }).join("")}</div>`;
 }
 async function loadAccounts(){
@@ -675,7 +685,7 @@ function renderMembers(){
       <td data-label="Saldo"><strong class="member-balance">${money(u.balance)}</strong></td>
       <td data-label="Akses server"><div class="server-toggles"><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg1" ${servers.includes("sg1")?"checked":""}> SG1</label><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg2" ${servers.includes("sg2")?"checked":""}> SG2</label><label><input type="checkbox" data-member-action="server" data-id="${escAttr(u.id)}" data-server="sg3" ${servers.includes("sg3")?"checked":""}> SG3</label></div></td>
       <td data-label="Status"><span class="badge ${u.active===false?"off":""}">${u.active===false?"NONAKTIF":"AKTIF"}</span></td>
-      <td data-label="Tambah saldo"><div class="topup-control"><input type="number" min="1" step="1" inputmode="numeric" placeholder="Nominal Rp" aria-label="Nominal saldo ${escAttr(u.username)}" data-topup-amount="${escAttr(u.id)}"><button class="mini topup-btn" data-member-action="topup" data-id="${escAttr(u.id)}">＋ Tambah</button></div></td>
+      <td data-label="Tambah saldo"><div class="topup-control"><input type="number" min="1" step="1" inputmode="numeric" placeholder="Nominal Rp" aria-label="Nominal saldo ${escAttr(u.username)}" data-topup-amount="${escAttr(u.id)}"><button class="mini topup-btn" data-member-action="topup" data-id="${escAttr(u.id)}">Tambah</button></div></td>
       <td data-label="Aksi"><div class="actions"><button class="mini" data-member-action="toggle" data-id="${escAttr(u.id)}">${u.active===false?"Aktifkan":"Nonaktifkan"}</button><button class="mini danger" data-member-action="delete" data-id="${escAttr(u.id)}">Hapus</button></div></td>
     </tr>`;
   }).join("")}</tbody></table>`;

@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-:root{--bg:#080d17;--panel:#101827;--panel2:#131e30;--line:#243248;--text:#eef4ff;--muted:#8b9bb3;--blue:#4f8cff;--cyan:#55d6e8;--green:#49d6a3;--red:#ff6f86}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+:root{--bg:#0E1422;--panel:#151D32;--panel2:#1A2440;--line:#263052;--text:#EEF0FF;--muted:#8E98B8;--blue:#A78BFA;--cyan:#2DD4BF;--green:#2DD4BF;--red:#FB7185;--violet:#A78BFA;--violet-deep:#6D4FD6;--teal:#2DD4BF;--sun:#FDE047}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px 'DM Sans',sans-serif}button,input,select{font:inherit}button{cursor:pointer}h1,h2,h3,p{margin-top:0}h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-.03em}h1{font-size:30px;margin-bottom:0}h2{font-size:34px;line-height:1.14}h3{font-size:18px;margin-bottom:6px}.muted{color:var(--muted);line-height:1.6}.eyebrow{color:#6da3ff;font-size:10px;font-weight:700;letter-spacing:.17em;margin-bottom:8px}.hidden{display:none!important}
 .login-shell{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0,#172b4a 0,transparent 55%),var(--bg)}.login-card{width:min(100%,410px);padding:38px;border:1px solid var(--line);border-radius:22px;background:rgba(16,24,39,.92);box-shadow:0 25px 80px #0005}.brand-mark{width:58px;height:58px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(135deg,#3e7fff,#53d7e7);color:#fff;font:700 20px 'Space Grotesk';box-shadow:0 8px 30px #428dff45}.brand-mark span{font-size:11px;margin-left:2px}.login-card .eyebrow{margin-top:26px}.login-card h1{margin-bottom:8px}.login-card form{display:grid;gap:16px;margin-top:26px}
 label{display:grid;gap:8px;color:#b9c6d8;font-size:12px;font-weight:600}input,select{width:100%;min-width:0;color:var(--text);background:#0b1321;border:1px solid #2a3a51;border-radius:10px;padding:12px 13px;outline:none}input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #4f8cff20}input::placeholder{color:#53637a}small,.tiny{font-size:11px;color:var(--muted)}.primary,.secondary,.ghost{border:0;border-radius:10px;padding:12px 16px;font-weight:700}.primary{background:linear-gradient(110deg,#4b83ff,#4bc6e5);color:#fff;box-shadow:0 7px 22px #438eff25}.primary:hover{filter:brightness(1.08)}.primary span{float:right;margin-left:20px}.full{width:100%}.secondary{background:#1b2a40;color:#dce8fb;border:1px solid #30425b}.ghost{background:transparent;color:#a9bad0;padding:8px 10px}.error{color:var(--red);min-height:18px}.tiny{margin-top:25px}
@@ -488,4 +488,111 @@ label{display:grid;gap:8px;color:#b9c6d8;font-size:12px;font-weight:600}input,se
   .server-picker {
     margin-bottom: 14px !important;
   }
+}
+
+
+/* ============================================================
+   TEMA MISUBUFURU (neko) — violet + teal di atas navy gelap.
+   Blok ini sengaja di paling bawah supaya menimpa aturan lama.
+   ============================================================ */
+h1,h2,h3{font-family:'Poppins','DM Sans',sans-serif;letter-spacing:-.02em}
+body{background:var(--bg)}
+select option{background:#0E1426;color:#EEF0FF}
+.eyebrow{color:#A78BFA}
+.welcome h2 span{color:#A78BFA}
+
+/* sidebar + brand */
+.sidebar{background:#0F1527;border-right:1px solid #232C4D;box-shadow:none}
+.brand-logo{width:46px;height:46px;flex:0 0 46px;border-radius:0}
+.brand b{font:700 17px 'Poppins',sans-serif;letter-spacing:-.01em}
+.brand small{color:#2DD4BF;font-weight:600;letter-spacing:.3em}
+.side-bottom{color:#6E7AA6}
+.status-dot{background:#2DD4BF;box-shadow:0 0 0 3px #2DD4BF22}
+
+/* navigasi */
+.nav{color:#8E98B8;border:1px solid transparent}
+.nav .ico,.quick-grid .ico{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav:hover{background:#171F3A;border-color:transparent;color:#EEF0FF}
+.nav.active{background:#1E2750;border-color:transparent;color:#fff;box-shadow:inset 3px 0 #2DD4BF}
+.nav.active .ico{color:#2DD4BF}
+
+/* kartu & panel */
+.stat,.panel{background:#151D32;border:1px solid #263052}
+.stat strong{font-family:'Poppins',sans-serif;font-weight:600}
+.balance-stat strong,.member-summary strong,.member-balance{color:#2DD4BF}
+.status-text{color:#2DD4BF}
+.welcome{background:linear-gradient(120deg,#231C55 0%,#171E38 65%);border:1px solid #33316F}
+.welcome-art{opacity:1;width:260px;height:230px}
+.welcome-art::before{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:#1B2447;border:1px solid #2F3A6E}
+.welcome-mascot{position:relative;width:190px;height:190px;filter:drop-shadow(0 14px 24px #0006)}
+.quick-grid button{background:#10172B;border:1px solid #263052;border-radius:14px;transition:border-color .15s,background .15s,transform .15s}
+.quick-grid button:hover{background:#161F3A;border-color:#A78BFA;transform:translateY(-2px)}
+.quick-grid b{color:#A78BFA;display:flex}
+.quick-grid .ico{width:22px;height:22px}
+.member-summary>div{background:#10172B;border-color:#263052}
+.pill{color:#C4B5FD;border-color:#3A3D7A}
+.notice{background:#1A2147;border-color:#3A3D7A;color:#DDD6FE}
+.notice.bad{background:#2B1723;border-color:#5E3045;color:#FDA4B4}
+.result-data div,.server-item{background:#10172B;border-color:#263052}
+.result-links a{color:#C4B5FD}
+.data-table th{color:#8E98B8;border-bottom-color:#263052}
+.data-table td{border-bottom-color:#1D2645;color:#D2D7F0}
+.data-table .user{color:#fff}
+footer{color:#5B6590}
+
+/* form */
+label{color:#B8C0E0}
+input,select{background:#0E1426;border:1px solid #2C3760;border-radius:12px}
+input:focus,select:focus{border-color:#A78BFA;box-shadow:0 0 0 3px #A78BFA26}
+input::placeholder{color:#555F88}
+.check-option input,.server-toggles input{accent-color:#A78BFA}
+.server-access{border-color:#263052}
+
+/* tombol: solid, ada "tepi bawah" tipis, turun sedikit saat ditekan */
+.primary,.secondary,.ghost,.mini{transition:transform .08s ease,box-shadow .08s ease,background .15s ease,border-color .15s ease,color .15s ease}
+.primary{background:#A78BFA;color:#1B1340;border:0;border-radius:12px;padding:12px 20px;font-weight:700;box-shadow:0 3px 0 #6D4FD6}
+.primary:hover{background:#B79DFF;filter:none}
+.primary:active{transform:translateY(3px);box-shadow:0 0 0 #6D4FD6}
+.primary:disabled,.secondary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.secondary{background:transparent;color:#E4E7FF;border:1.5px solid #3A4570;border-radius:12px;box-shadow:none}
+.secondary:hover{background:#1B2446;border-color:#5B67A0}
+.secondary:active{transform:translateY(1px)}
+.ghost{color:#B8C0E0}.ghost:hover{color:#fff}
+.mini{background:#1E2750;border:0;color:#D5D9F5;border-radius:9px;padding:7px 11px;font-weight:600}
+.mini:hover{background:#2A3566;color:#fff}
+.mini:active{transform:translateY(1px)}
+.mini.danger{background:#3A1F2F;color:#FDA4B4;border:0}
+.mini.danger:hover{background:#4C2639;color:#FFC2CE}
+.topup-btn{background:#12332F;color:#5EEAD4;border:0}
+.topup-btn:hover{background:#18443E;color:#99F6E4}
+button:focus-visible,.nav:focus-visible{outline:2px solid #2DD4BF;outline-offset:2px}
+.primary:focus-visible{outline-offset:3px}
+
+/* badge + chip */
+.badge{background:#12332F;color:#5EEAD4}
+.badge.off{background:#3A1F2F;color:#FDA4B4}
+.online-card .badge{background:#12332F;color:#5EEAD4;border:1px solid #1F5C54}
+.balance-chip{background:#12332F;border:1px solid #1F5C54;color:#5EEAD4;box-shadow:none}
+#headerBalance:not(.hidden)::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#2DD4BF;font-size:0}
+.avatar{background:#2A2160;color:#DDD0FF}
+
+/* kartu akun & sesi online */
+.account-card{background:#151D32;border:1px solid #263052;box-shadow:none}
+.account-card:hover{border-color:#5B49B8;transform:translateY(-1px)}
+.account-card-top,.account-card-actions{border-color:#263052}
+.account-details>div{background:#0F1629;border-color:#242E52}
+.account-details b{color:#E4E8FF}
+.account-identity strong{color:#fff}
+.account-identity span,.account-details span{color:#8E98B8}
+.account-avatar{background:#2A2160;color:#DDD0FF;box-shadow:none}
+.online-avatar{background:#11403B;color:#7CF0DB}
+
+/* HP */
+@media(max-width:760px){
+  .sidebar{background:rgba(15,21,39,.96);border-bottom:1px solid #232C4D;box-shadow:none}
+  .brand-logo{width:38px;height:38px;flex-basis:38px}
+  .nav{background:#141C33;border-color:#263052}
+  .nav.active{background:#262F66;border-color:#3A3D7A;box-shadow:none}
+  .nav.active:after{background:#2DD4BF;box-shadow:none}
+  .welcome-art{right:-60px;top:30px;opacity:.16}
 }

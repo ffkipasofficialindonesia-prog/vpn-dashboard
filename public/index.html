@@ -3,21 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080d17">
-  <title>VPN Control — Local Dashboard</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta name="theme-color" content="#0E1422">
+  <title>misubufuru — Panel VPN</title>
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css?v=20261120-neko">
 </head>
 <body>
   <div id="appView" class="app">
     <aside class="sidebar">
-      <div class="brand"><img class="brand-logo" src="/assets/logo.svg" alt="VPN Control logo" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="brand-mark small" hidden>V<span>PN</span></div><div class="brand-copy"><b>VPN Control</b><small>ADMIN CONSOLE</small></div></div>
+      <div class="brand"><img class="brand-logo" src="/assets/logo.svg" alt="misubufuru"><div class="brand-copy"><b>misubufuru</b><small>PUBLIC VPN</small></div></div>
       <nav>
-        <button class="nav active" data-page="dashboard">▦ <span>Dashboard</span></button>
-        <button class="nav" data-page="create">＋ <span>Buat Akun</span></button>
-        <button class="nav" data-page="accounts">☷ <span>Daftar Akun</span></button>
-        <button class="nav" data-page="online">◉ <span>Pengguna Online</span></button>
-        <button class="nav" data-page="server">⌘ <span>Info Server</span></button>
-        <button class="nav admin-only hidden" data-page="members" id="membersNav">♙ <span>Member & Saldo</span></button>
+        <button class="nav active" data-page="dashboard"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg> <span>Dashboard</span></button>
+        <button class="nav" data-page="create"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg> <span>Buat Akun</span></button>
+        <button class="nav" data-page="accounts"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></svg> <span>Daftar Akun</span></button>
+        <button class="nav" data-page="online"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10.5a10.5 10.5 0 0 1 15 0"/><path d="M8 14a5.5 5.5 0 0 1 8 0"/><circle cx="12" cy="18" r="1.3"/></svg> <span>Pengguna Online</span></button>
+        <button class="nav" data-page="server"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg> <span>Info Server</span></button>
+        <button class="nav admin-only hidden" data-page="members" id="membersNav"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18.5 14.2A6 6 0 0 1 21.5 20"/></svg> <span>Member &amp; Saldo</span></button>
       </nav>
       <div class="side-bottom"><div class="status-dot"></div><span>API connected on demand</span></div>
     </aside>
@@ -27,10 +28,10 @@
       <div id="notice" class="notice hidden"></div>
 
       <section id="page-dashboard" class="page">
-        <div class="welcome"><div><p class="eyebrow">OVERVIEW</p><h2>Kelola server VPN<br><span>dalam satu tempat.</span></h2><p class="muted">Buat akun, pantau status, dan atur akses pelanggan.</p><button class="primary" data-go="create">＋ Buat akun baru</button></div><div class="welcome-art"><div class="orb">⌁</div><div class="ring r1"></div><div class="ring r2"></div></div></div>
+        <div class="welcome"><div><p class="eyebrow">OVERVIEW</p><h2>Kelola server VPN<br><span>dalam satu tempat.</span></h2><p class="muted">Buat akun, pantau status, dan atur akses pelanggan.</p><button class="primary" data-go="create">Buat akun baru</button></div><div class="welcome-art"><img class="welcome-mascot" src="/assets/logo.svg" alt=""></div></div>
         <div class="stats"><article class="stat"><span>Total akun</span><strong id="statAccounts">—</strong><small>Protocol terpilih</small></article><article class="stat"><span>Pengguna online</span><strong id="statOnline">—</strong><small>Live session</small></article><article class="stat"><span>Status API</span><strong id="statApi" class="status-text">Belum dicek</strong><small>Autentikasi backend</small></article><article class="stat balance-stat" id="balanceStat"><span id="balanceStatLabel">Saldo akun</span><strong id="statBalance">Rp0</strong><small id="balanceStatHint">Saldo tersedia</small></article></div>
-        <div class="panel member-topup-panel"><div class="panel-head"><div><h3>Isi Saldo</h3><p class="muted">Hubungi admin untuk melakukan top up saldo.</p></div></div><button type="button" id="topupBtn" class="primary hidden">＋ Top Up Saldo via WhatsApp</button></div>
-        <div class="panel"><div class="panel-head"><div><h3>Akses cepat</h3><p class="muted">Pilih tindakan yang ingin dilakukan.</p></div></div><div class="quick-grid"><button data-go="create"><b>＋</b><span>Buat akun</span><small>Buat akun baru</small></button><button data-go="accounts"><b>☷</b><span>Daftar akun</span><small>Lihat & kelola akun</small></button><button data-go="online"><b>◉</b><span>Pengguna online</span><small>Pantau koneksi aktif</small></button><button data-go="server"><b>⌘</b><span>Info server</span><small>Domain dan port</small></button></div></div>
+        <div class="panel member-topup-panel"><div class="panel-head"><div><h3>Isi Saldo</h3><p class="muted">Hubungi admin untuk melakukan top up saldo.</p></div></div><button type="button" id="topupBtn" class="primary hidden">Top up saldo via WhatsApp</button></div>
+        <div class="panel"><div class="panel-head"><div><h3>Akses cepat</h3><p class="muted">Pilih tindakan yang ingin dilakukan.</p></div></div><div class="quick-grid"><button data-go="create"><b><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></b><span>Buat akun</span><small>Buat akun baru</small></button><button data-go="accounts"><b><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></svg></b><span>Daftar akun</span><small>Lihat & kelola akun</small></button><button data-go="online"><b><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10.5a10.5 10.5 0 0 1 15 0"/><path d="M8 14a5.5 5.5 0 0 1 8 0"/><circle cx="12" cy="18" r="1.3"/></svg></b><span>Pengguna online</span><small>Pantau koneksi aktif</small></button><button data-go="server"><b><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></b><span>Info server</span><small>Domain dan port</small></button></div></div>
       </section>
 
       <section id="page-create" class="page hidden">
@@ -43,22 +44,22 @@
             <label>Masa aktif (hari)<select name="days" required><option value="7">7 hari</option><option value="30" selected>30 hari</option></select></label>
             <label>Batas perangkat / IP<input name="ip_limit" type="number" min="1" max="1000" value="2" required><small>Tambah 1 IP = Rp2,000/Bulan</small></label>
             <label>Kuota (GB)<input name="quota_gb" type="number" min="250" step="1" value="0" required><small>Kuota minimal 250 GB</small></label>
-            <div class="form-actions"><button class="primary" type="submit">Buat akun <span>→</span></button><button class="secondary" type="button" id="trialBtn">Buat trial 60 menit</button></div>
+            <div class="form-actions"><button class="primary" type="submit">Buat akun</button><button class="secondary" type="button" id="trialBtn">Buat trial 60 menit</button></div>
           </form>
         </div>
         <div id="createdResult" class="panel hidden"></div>
       </section>
 
       <section id="page-accounts" class="page hidden">
-        <div class="panel"><div class="panel-head wrap-head"><div><h3>Daftar akun</h3><p class="muted">Cari, perpanjang, kunci, atau hapus akun.</p></div><div class="toolbar"><select id="accountsProto"><option value="ssh">SSH</option><option value="vmess">VMess</option><option value="vless">VLESS</option><option value="trojan">Trojan</option><option value="zivpn">ZiVPN</option></select><button id="refreshAccounts" class="secondary">↻ Refresh</button></div></div><input id="accountSearch" class="search" placeholder="Cari username..."><div id="accountsTable" class="table-wrap"><div class="empty">Pilih protocol lalu refresh.</div></div></div>
+        <div class="panel"><div class="panel-head wrap-head"><div><h3>Daftar akun</h3><p class="muted">Cari, perpanjang, kunci, atau hapus akun.</p></div><div class="toolbar"><select id="accountsProto"><option value="ssh">SSH</option><option value="vmess">VMess</option><option value="vless">VLESS</option><option value="trojan">Trojan</option><option value="zivpn">ZiVPN</option></select><button id="refreshAccounts" class="secondary">Refresh</button></div></div><input id="accountSearch" class="search" placeholder="Cari username..."><div id="accountsTable" class="table-wrap"><div class="empty">Pilih protocol lalu refresh.</div></div></div>
       </section>
 
       <section id="page-online" class="page hidden">
-        <div class="panel"><div class="panel-head wrap-head"><div><h3>Pengguna online</h3><p class="muted">Sesi aktif yang dilaporkan API.</p></div><div class="toolbar"><select id="onlineProto"><option value="ssh">SSH</option><option value="vmess">VMess</option><option value="vless">VLESS</option><option value="trojan">Trojan</option><option value="zivpn">ZiVPN</option></select><button id="refreshOnline" class="secondary">↻ Refresh</button></div></div><div id="onlineTable" class="table-wrap"><div class="empty">Klik refresh untuk mengambil data.</div></div></div>
+        <div class="panel"><div class="panel-head wrap-head"><div><h3>Pengguna online</h3><p class="muted">Sesi aktif yang dilaporkan API.</p></div><div class="toolbar"><select id="onlineProto"><option value="ssh">SSH</option><option value="vmess">VMess</option><option value="vless">VLESS</option><option value="trojan">Trojan</option><option value="zivpn">ZiVPN</option></select><button id="refreshOnline" class="secondary">Refresh</button></div></div><div id="onlineTable" class="table-wrap"><div class="empty">Klik refresh untuk mengambil data.</div></div></div>
       </section>
 
       <section id="page-server" class="page hidden">
-        <div class="panel"><div class="panel-head"><div><h3>Informasi server</h3><p class="muted">Detail server dari API VPN.</p></div><button id="refreshServer" class="secondary">↻ Refresh</button></div><div id="serverInfo" class="server-grid"><div class="empty">Klik refresh untuk mengambil info server.</div></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Informasi server</h3><p class="muted">Detail server dari API VPN.</p></div><button id="refreshServer" class="secondary">Refresh</button></div><div id="serverInfo" class="server-grid"><div class="empty">Klik refresh untuk mengambil info server.</div></div></div>
       </section>
 
       <section id="page-members" class="page hidden admin-only">
@@ -68,18 +69,18 @@
             <label>Username<input name="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_.-]{3,32}" placeholder="contoh: pelanggan01" autocomplete="off"></label>
             <label>Password<input name="password" type="password" required minlength="6" maxlength="128" placeholder="Minimal 6 karakter" autocomplete="new-password"></label>
             <fieldset class="server-access"><legend>Akses server</legend><label class="check-option"><input type="checkbox" name="servers" value="sg1"> SG1 — Singapore 1</label><label class="check-option"><input type="checkbox" name="servers" value="sg2" checked> SG2 — Singapore 2</label><label class="check-option"><input type="checkbox" name="servers" value="sg3"> SG3 — Singapore 3</label></fieldset>
-            <div class="form-actions"><button class="primary" type="submit">＋ Buat member</button></div>
+            <div class="form-actions"><button class="primary" type="submit">Buat member</button></div>
           </form>
         </div>
         <div class="panel">
-          <div class="panel-head wrap-head"><div><h3>Daftar member</h3><p class="muted">Lihat saldo, tambah saldo, atur akses server, dan aktif/nonaktifkan akun.</p></div><div class="toolbar"><input id="memberSearch" placeholder="Cari member..." aria-label="Cari member"><button id="refreshMembers" class="secondary" type="button">↻ Refresh</button></div></div>
+          <div class="panel-head wrap-head"><div><h3>Daftar member</h3><p class="muted">Lihat saldo, tambah saldo, atur akses server, dan aktif/nonaktifkan akun.</p></div><div class="toolbar"><input id="memberSearch" placeholder="Cari member..." aria-label="Cari member"><button id="refreshMembers" class="secondary" type="button">Refresh</button></div></div>
           <div class="member-summary"><div><span>Total member</span><strong id="memberCount">0</strong></div><div><span>Total saldo member</span><strong id="memberTotalBalance">Rp0</strong></div></div>
           <div id="membersTable" class="table-wrap"><div class="empty">Memuat daftar member...</div></div>
         </div>
       </section>
-      <footer>VPN Control Panel <span>•</span> Admin WA 083115730605</footer>
+      <footer>misubufuru Panel <span>•</span> Admin WA 083115730605</footer>
     </main>
   </div>
-  <script src="/app.js?v=20261106-2" defer></script>
+  <script src="/app.js?v=20261120-neko" defer></script>
 </body>
 </html>
